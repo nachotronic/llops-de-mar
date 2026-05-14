@@ -1,6 +1,7 @@
 <!--
   Versió 3.4 · Bloc mapa i previsió Llop de Mar
-  Punt de control: mapa CARTO, selector de grups sota el mapa en escriptori, controls mòbils al panell, previsió, sensació tèrmica, estat de la mar, sol, Meteocat i camp de vent animat.
+  Mapa CARTO, selector de grups, previsió, sensació tèrmica, estat/direcció de la mar,
+  sortida/posta de sol, botons Meteocat i camp de vent animat.
 -->
 <!DOCTYPE html>
 <html lang="ca">
@@ -8,616 +9,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mapa i previsió · Llop de Mar</title>
-  <meta name="description" content="Mapa de la costa entre S'Agaró i Punta del Romaguer amb previsió de pluja, temperatura, vent i estat de la mar per als grups de rem." />
-
+  <meta name="description" content="Mapa de la zona de rem de Sant Feliu de Guíxols amb previsió de pluja, temperatura, vent i estat de la mar per als grups de rem." />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
   <style>
-    :root {
-      --ink: #102f3a;
-      --ink-soft: #49656d;
-      --sea: #dceff3;
-      --paper: #fbf8f1;
-      --paper-2: #f3eadb;
-      --rope: #a98255;
-      --red: #be123c;
-      --white: #ffffff;
-      --shadow: 0 14px 34px rgba(16, 47, 58, .12);
+    :root{
+      --ink:#102f3a;--ink-soft:#49656d;--sea:#dceff3;--paper:#fbf8f1;--paper-2:#f3eadb;
+      --red:#be123c;--white:#fff;--shadow:0 14px 34px rgba(16,47,58,.12)
     }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--ink);
-      background: var(--paper);
-      line-height: 1.6;
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper);line-height:1.6}
+    .remo-weather-block{width:100%;padding:1rem;background:var(--paper)}
+    .remo-dashboard{width:100%;max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);gap:1rem;align-items:start}
+    .map-column{display:flex;flex-direction:column;gap:1rem}
+    .map-card,.weather-card,.map-controls{border-radius:18px;overflow:hidden;box-shadow:var(--shadow);background:var(--white);border:1px solid rgba(16,47,58,.14)}
+    .map-frame-wrap{position:relative;height:520px;min-height:360px;width:100%;background:var(--sea);overflow:hidden}
+    #map{width:100%;height:100%}
+    .map-error{height:100%;display:none;place-items:center;padding:1.5rem;text-align:center;background:var(--sea);color:var(--ink);font-weight:800}
+    .map-note{position:absolute;z-index:500;right:1rem;bottom:1rem;border-radius:7px;box-shadow:0 8px 20px rgba(0,0,0,.10);background:rgba(16,47,58,.88);color:#fff;padding:.5rem .7rem;font-weight:700;font-size:.74rem;letter-spacing:.02em}
+    .weather-card{padding:1.15rem;display:flex;flex-direction:column;gap:1rem;background:linear-gradient(180deg,rgba(251,248,241,.98),rgba(255,255,255,.98))}
+    .weather-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+    .weather-card h2,.session-summary strong,.mini-wind-info strong{font-family:Georgia,"Times New Roman",serif;color:var(--ink)}
+    .weather-card h2{font-size:1.45rem;line-height:1.05;letter-spacing:-.02em;margin:0}
+    .weather-logo{width:54px;height:54px;flex:0 0 54px;border-radius:50%;background:var(--white);border:1px solid rgba(16,47,58,.14);box-shadow:0 6px 14px rgba(16,47,58,.10);object-fit:contain;padding:.2rem}
+    .weather-logo-fallback{display:none;width:54px;height:54px;flex:0 0 54px;border-radius:50%;place-items:center;font-family:Georgia,"Times New Roman",serif;font-weight:900;color:var(--ink);background:radial-gradient(circle at center,#fff 0 42%,#be123c 43% 55%,#fff 56% 68%,#102f3a 69% 100%);border:1px solid rgba(16,47,58,.14);box-shadow:0 6px 14px rgba(16,47,58,.10);font-size:.85rem}
+    .updated{color:var(--ink-soft);font-size:.88rem;margin:-.45rem 0 .1rem}
+    .map-controls{display:grid;gap:.75rem;padding:.9rem}
+    .mobile-controls{display:none}
+    .day-buttons,.session-buttons{display:grid;gap:.5rem}
+    .day-buttons{grid-template-columns:repeat(2,1fr)}
+    .session-buttons{grid-template-columns:repeat(3,1fr)}
+    .day-btn,.session-btn{border:1px solid rgba(16,47,58,.16);background:var(--white);color:var(--ink);padding:.7rem .45rem;border-radius:7px;font-family:Georgia,"Times New Roman",serif;font-weight:700;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease;font-size:.95rem}
+    .day-btn:hover,.session-btn:hover{transform:translateY(-1px)}
+    .day-btn.active,.session-btn.active{background:var(--ink);color:var(--white);border-color:var(--ink)}
+    .session-summary{background:var(--paper-2);border-radius:10px;padding:.95rem;color:var(--ink-soft);font-size:.95rem;border:1px solid rgba(16,47,58,.10)}
+    .session-summary strong{display:block;font-size:1.08rem;margin-bottom:.25rem}
+    .forecast-used{display:block;margin-top:.2rem;color:var(--ink-soft);font-size:.8rem;font-weight:700}
+    .status-line{display:inline-flex;align-items:center;gap:.45rem;margin-top:.45rem;font-weight:800;color:var(--ink)}
+    .status-dot{width:.7rem;height:.7rem;border-radius:50%;background:#16803c}
+    .session-meta{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:.75rem}
+    .meta-pill{display:inline-flex;align-items:center;gap:.45rem;padding:.45rem .7rem;background:rgba(255,255,255,.72);border:1px solid rgba(16,47,58,.10);border-radius:999px;color:var(--ink);font-size:.9rem;font-weight:700}
+    .sea-pill{background:#eef7f8}
+    .mini-wind-card{display:grid;grid-template-columns:78px 1fr;gap:.75rem;align-items:center;margin-top:.8rem;padding:.75rem;background:rgba(255,255,255,.64);border:1px solid rgba(16,47,58,.10);border-radius:12px}
+    .mini-compass{width:70px;height:70px;border-radius:50%;background:var(--white);display:grid;place-items:center;position:relative;box-shadow:inset 0 0 0 1px rgba(16,47,58,.16)}
+    .mini-compass::before,.mini-compass::after{position:absolute;font-size:.58rem;font-weight:900;color:var(--ink-soft)}
+    .mini-compass::before{content:"N";top:.2rem}.mini-compass::after{content:"S";bottom:.2rem}
+    .mini-compass-arrow-wrap{width:38px;height:38px;transform-origin:center;transition:transform .6s ease;display:grid;place-items:center}
+    .mini-compass-arrow{width:38px;height:38px;color:var(--red);transform-origin:center;animation:pulseWind 1.8s ease-in-out infinite}
+    @keyframes pulseWind{0%,100%{scale:1;opacity:.82}50%{scale:1.08;opacity:1}}
+    .mini-wind-info strong{display:block;font-size:1.28rem;line-height:1}
+    .mini-wind-info span{display:block;margin-top:.25rem;color:var(--ink-soft);font-size:.9rem;font-weight:700}
+    .forecast-comment{margin-top:.55rem;padding-top:.55rem;border-top:1px solid rgba(16,47,58,.10);color:var(--ink);font-size:.88rem;font-weight:700;line-height:1.35}
+    .forecast-alert{margin-top:.65rem;padding:.62rem .7rem;border-radius:8px;background:#fff1f2;border:1px solid rgba(190,18,60,.22);color:#991b1b;font-size:.88rem;font-weight:800;line-height:1.35}
+    .sun-info{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.65rem;padding:.6rem .7rem;border-radius:8px;background:rgba(255,255,255,.58);border:1px solid rgba(16,47,58,.10);color:var(--ink-soft);font-size:.86rem;font-weight:800}
+    .sun-info span{display:inline-flex;align-items:center;gap:.25rem}
+    .external-links{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center}
+    .radar-link{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;padding:.42rem .58rem;border-radius:999px;background:rgba(255,255,255,.62);color:var(--ink-soft);border:1px solid rgba(16,47,58,.16);text-decoration:none;font-weight:800;font-size:.76rem;line-height:1;transition:transform .15s ease,background .15s ease,color .15s ease}
+    .radar-link:hover{transform:translateY(-1px);background:var(--white);color:var(--ink)}
+    .notice{font-size:.86rem;color:var(--ink-soft);background:rgba(255,255,255,.72);border:1px solid rgba(16,47,58,.12);border-radius:10px;padding:.8rem}
+    .leaflet-container{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .wind-stream-layer{position:absolute;inset:0;z-index:420;pointer-events:none;overflow:hidden;opacity:1;transition:opacity .28s ease}
+    .wind-stream-layer.is-fading{opacity:0}
+    .wind-stream-field{--wind-color:#164782;--wind-opacity:.78;--wind-angle:0deg;position:absolute;inset:-2%;transform-origin:center}
+    .wind-stream{position:absolute;width:22px;height:11px;opacity:var(--wind-opacity);animation:windArrowMove 4.2s linear infinite;filter:drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 3px rgba(255,255,255,.9)) drop-shadow(0 1px 2px rgba(16,47,58,.28))}
+    .wind-stream::before{content:"";position:absolute;left:0;top:4px;width:14px;height:2.2px;border-radius:999px;background:var(--wind-color);box-shadow:0 0 0 1px rgba(255,255,255,.75)}
+    .wind-stream::after{content:"";position:absolute;right:1px;top:2px;width:6px;height:6px;border-top:2.2px solid var(--wind-color);border-right:2.2px solid var(--wind-color);transform:rotate(45deg);filter:drop-shadow(0 0 1px rgba(255,255,255,.95))}
+    @keyframes windArrowMove{0%{transform:rotate(var(--wind-angle)) translateX(-10px);opacity:0}12%{opacity:var(--wind-opacity)}82%{opacity:var(--wind-opacity)}100%{transform:rotate(var(--wind-angle)) translateX(22px);opacity:0}}
+    @media(max-width:900px){.remo-dashboard{grid-template-columns:1fr}.map-frame-wrap{height:380px}.map-controls{display:none}.mobile-controls{display:grid;gap:.75rem}}
+    @media(max-width:560px){
+      .remo-weather-block{padding:.45rem}.weather-card{padding:.75rem;gap:.75rem}.weather-card h2{font-size:1.25rem}.weather-logo,.weather-logo-fallback{width:44px;height:44px;flex-basis:44px}.updated{font-size:.78rem;margin:-.35rem 0 0}.session-summary{padding:.75rem;font-size:.86rem}.session-summary strong{font-size:.98rem}.forecast-used{font-size:.74rem}.status-line{margin-top:.35rem;font-size:.86rem}.session-meta{gap:.35rem;margin-top:.55rem}.meta-pill{padding:.32rem .52rem;font-size:.78rem}.session-buttons{grid-template-columns:repeat(3,1fr)}.day-btn,.session-btn{padding:.5rem .35rem;font-size:.82rem}.mini-wind-card{grid-template-columns:52px 1fr;gap:.55rem;text-align:left;margin-top:.6rem;padding:.6rem;border-radius:10px}.mini-compass{width:50px;height:50px;margin:0}.mini-compass::before,.mini-compass::after{font-size:.48rem}.mini-compass-arrow-wrap,.mini-compass-arrow{width:28px;height:28px}.mini-wind-info strong{font-size:1.05rem}.mini-wind-info span{font-size:.78rem}.forecast-comment{margin-top:.42rem;padding-top:.42rem;font-size:.78rem;line-height:1.28}.forecast-alert{margin-top:.45rem;padding:.5rem .55rem;font-size:.78rem}.sun-info{margin-top:.5rem;padding:.45rem .55rem;font-size:.78rem}.external-links{gap:.35rem}.radar-link{padding:.36rem .5rem;font-size:.72rem}.notice{padding:.6rem;font-size:.76rem;line-height:1.35}.map-note{display:none}.map-frame-wrap{height:260px;min-height:240px}
     }
-
-    .remo-weather-block {
-      width: 100%;
-      padding: 1rem;
-      background: var(--paper);
-    }
-
-    .remo-dashboard {
-      width: 100%;
-      max-width: 1180px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr);
-      gap: 1rem;
-      align-items: start;
-    }
-
-    .map-column {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .map-card,
-    .weather-card,
-    .map-controls {
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      background: var(--white);
-      border: 1px solid rgba(16, 47, 58, .14);
-    }
-
-    .map-frame-wrap {
-      position: relative;
-      height: 520px;
-      min-height: 360px;
-      width: 100%;
-      background: var(--sea);
-      overflow: hidden;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-
-    .map-error {
-      height: 100%;
-      display: none;
-      place-items: center;
-      padding: 1.5rem;
-      text-align: center;
-      background: var(--sea);
-      color: var(--ink);
-      font-weight: 800;
-    }    .map-note {
-      position: absolute;
-      z-index: 500;
-      border-radius: 7px;
-      box-shadow: 0 8px 20px rgba(0,0,0,.10);
-    }
-
-    .map-note {
-      right: 1rem;
-      bottom: 1rem;
-      background: rgba(16,47,58,.88);
-      color: white;
-      padding: .5rem .7rem;
-      font-weight: 700;
-      font-size: .74rem;
-      letter-spacing: .02em;
-    }
-
-    .map-note {
-      right: 1rem;
-      bottom: 1rem;
-      background: rgba(16,47,58,.88);
-      color: white;
-      padding: .5rem .7rem;
-      font-weight: 700;
-      font-size: .74rem;
-      letter-spacing: .02em;
-    }
-
-    .weather-card {
-      padding: 1.15rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      background: linear-gradient(180deg, rgba(251,248,241,.98), rgba(255,255,255,.98));
-    }
-
-    .weather-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-
-    .weather-card h2,
-    .session-summary strong,
-    .mini-wind-info strong {
-      font-family: Georgia, "Times New Roman", serif;
-      color: var(--ink);
-    }
-
-    .weather-card h2 {
-      font-size: 1.45rem;
-      line-height: 1.05;
-      letter-spacing: -.02em;
-      margin: 0;
-    }
-
-    .weather-logo {
-      width: 54px;
-      height: 54px;
-      flex: 0 0 54px;
-      border-radius: 50%;
-      background: var(--white);
-      border: 1px solid rgba(16,47,58,.14);
-      box-shadow: 0 6px 14px rgba(16,47,58,.10);
-      object-fit: contain;
-      padding: .2rem;
-    }
-
-    .weather-logo-fallback {
-      display: none;
-      width: 54px;
-      height: 54px;
-      flex: 0 0 54px;
-      border-radius: 50%;
-      place-items: center;
-      font-family: Georgia, "Times New Roman", serif;
-      font-weight: 900;
-      color: var(--ink);
-      background: radial-gradient(circle at center, #ffffff 0 42%, #be123c 43% 55%, #ffffff 56% 68%, #102f3a 69% 100%);
-      border: 1px solid rgba(16,47,58,.14);
-      box-shadow: 0 6px 14px rgba(16,47,58,.10);
-      font-size: .85rem;
-    }
-
-    .updated {
-      color: var(--ink-soft);
-      font-size: .88rem;
-      margin: -.45rem 0 .1rem;
-    }
-
-    .map-controls {
-      display: grid;
-      gap: .75rem;
-      padding: .9rem;
-    }
-
-    .mobile-controls {
-      display: none;
-    }
-
-    .day-buttons,
-    .session-buttons {
-      display: grid;
-      gap: .5rem;
-    }
-
-    .day-buttons {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .session-buttons {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .day-btn,
-    .session-btn {
-      border: 1px solid rgba(16,47,58,.16);
-      background: var(--white);
-      color: var(--ink);
-      padding: .7rem .45rem;
-      border-radius: 7px;
-      font-family: Georgia, "Times New Roman", serif;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .15s ease, background .15s ease, color .15s ease;
-      font-size: .95rem;
-    }
-
-    .day-btn:hover,
-    .session-btn:hover { transform: translateY(-1px); }
-
-    .day-btn.active,
-    .session-btn.active {
-      background: var(--ink);
-      color: var(--white);
-      border-color: var(--ink);
-    }
-
-    .session-summary {
-      background: var(--paper-2);
-      border-radius: 10px;
-      padding: .95rem;
-      color: var(--ink-soft);
-      font-size: .95rem;
-      border: 1px solid rgba(16,47,58,.10);
-    }
-
-    .session-summary strong {
-      display: block;
-      font-size: 1.08rem;
-      margin-bottom: .25rem;
-    }
-
-    .forecast-used {
-      display: block;
-      margin-top: .2rem;
-      color: var(--ink-soft);
-      font-size: .8rem;
-      font-weight: 700;
-    }
-
-    .status-line {
-      display: inline-flex;
-      align-items: center;
-      gap: .45rem;
-      margin-top: .45rem;
-      font-weight: 800;
-      color: var(--ink);
-    }
-
-    .status-dot {
-      width: .7rem;
-      height: .7rem;
-      border-radius: 50%;
-      background: #16803c;
-    }
-
-    .session-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .55rem;
-      margin-top: .75rem;
-    }
-
-    .meta-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: .45rem;
-      padding: .45rem .7rem;
-      background: rgba(255,255,255,.72);
-      border: 1px solid rgba(16,47,58,.10);
-      border-radius: 999px;
-      color: var(--ink);
-      font-size: .9rem;
-      font-weight: 700;
-    }
-
-    .sea-pill { background: #eef7f8; }
-
-    .mini-wind-card {
-      display: grid;
-      grid-template-columns: 78px 1fr;
-      gap: .75rem;
-      align-items: center;
-      margin-top: .8rem;
-      padding: .75rem;
-      background: rgba(255,255,255,.64);
-      border: 1px solid rgba(16,47,58,.10);
-      border-radius: 12px;
-    }
-
-    .mini-compass {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: var(--white);
-      display: grid;
-      place-items: center;
-      position: relative;
-      box-shadow: inset 0 0 0 1px rgba(16,47,58,.16);
-    }
-
-    .mini-compass::before,
-    .mini-compass::after {
-      position: absolute;
-      font-size: .58rem;
-      font-weight: 900;
-      color: var(--ink-soft);
-    }
-
-    .mini-compass::before { content: "N"; top: .2rem; }
-    .mini-compass::after { content: "S"; bottom: .2rem; }
-
-    .mini-compass-arrow-wrap {
-      width: 38px;
-      height: 38px;
-      transform-origin: center;
-      transition: transform .6s ease;
-      display: grid;
-      place-items: center;
-    }
-
-    .mini-compass-arrow {
-      width: 38px;
-      height: 38px;
-      color: var(--red);
-      transform-origin: center;
-      animation: pulseWind 1.8s ease-in-out infinite;
-    }
-
-    @keyframes pulseWind {
-      0%, 100% { scale: 1; opacity: .82; }
-      50% { scale: 1.08; opacity: 1; }
-    }
-
-    .mini-wind-info strong {
-      display: block;
-      font-size: 1.28rem;
-      line-height: 1;
-    }
-
-    .mini-wind-info span {
-      display: block;
-      margin-top: .25rem;
-      color: var(--ink-soft);
-      font-size: .9rem;
-      font-weight: 700;
-    }
-
-    .forecast-comment {
-      margin-top: .55rem;
-      padding-top: .55rem;
-      border-top: 1px solid rgba(16,47,58,.10);
-      color: var(--ink);
-      font-size: .88rem;
-      font-weight: 700;
-      line-height: 1.35;
-    }
-
-    .forecast-alert {
-      margin-top: .65rem;
-      padding: .62rem .7rem;
-      border-radius: 8px;
-      background: #fff1f2;
-      border: 1px solid rgba(190, 18, 60, .22);
-      color: #991b1b;
-      font-size: .88rem;
-      font-weight: 800;
-      line-height: 1.35;
-    }
-
-    .sun-info {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .45rem;
-      margin-top: .65rem;
-      padding: .6rem .7rem;
-      border-radius: 8px;
-      background: rgba(255,255,255,.58);
-      border: 1px solid rgba(16,47,58,.10);
-      color: var(--ink-soft);
-      font-size: .86rem;
-      font-weight: 800;
-    }
-
-    .sun-info span {
-      display: inline-flex;
-      align-items: center;
-      gap: .25rem;
-    }
-
-    .external-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .45rem;
-      align-items: center;
-    }
-
-    .radar-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: .35rem;
-      padding: .42rem .58rem;
-      border-radius: 999px;
-      background: rgba(255,255,255,.62);
-      color: var(--ink-soft);
-      border: 1px solid rgba(16,47,58,.16);
-      text-decoration: none;
-      font-weight: 800;
-      font-size: .76rem;
-      line-height: 1;
-      transition: transform .15s ease, background .15s ease, color .15s ease;
-    }
-
-    .radar-link:hover {
-      transform: translateY(-1px);
-      background: var(--white);
-      color: var(--ink);
-    }
-
-    .notice {
-      font-size: .86rem;
-      color: var(--ink-soft);
-      background: rgba(255,255,255,.72);
-      border: 1px solid rgba(16,47,58,.12);
-      border-radius: 10px;
-      padding: .8rem;
-    }
-
-    .leaflet-container {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    .wind-stream-layer {
-      position: absolute;
-      inset: 0;
-      z-index: 420;
-      pointer-events: none;
-      overflow: hidden;
-      opacity: 1;
-      transition: opacity .28s ease;
-    }
-
-    .wind-stream-layer.is-fading { opacity: 0; }
-
-    .wind-stream-field {
-      --wind-color: #164782;
-      --wind-opacity: .78;
-      --wind-angle: 0deg;
-      position: absolute;
-      inset: -2%;
-      transform-origin: center;
-    }
-
-    .wind-stream {
-      position: absolute;
-      width: 22px;
-      height: 11px;
-      opacity: var(--wind-opacity);
-      animation: windArrowMove 4.2s linear infinite;
-      filter:
-        drop-shadow(0 0 1px rgba(255,255,255,1))
-        drop-shadow(0 0 3px rgba(255,255,255,.9))
-        drop-shadow(0 1px 2px rgba(16,47,58,.28));
-    }
-
-    .wind-stream::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 4px;
-      width: 14px;
-      height: 2.2px;
-      border-radius: 999px;
-      background: var(--wind-color);
-      box-shadow: 0 0 0 1px rgba(255,255,255,.75);
-    }
-
-    .wind-stream::after {
-      content: "";
-      position: absolute;
-      right: 1px;
-      top: 2px;
-      width: 6px;
-      height: 6px;
-      border-top: 2.2px solid var(--wind-color);
-      border-right: 2.2px solid var(--wind-color);
-      transform: rotate(45deg);
-      filter: drop-shadow(0 0 1px rgba(255,255,255,.95));
-    }
-
-    @keyframes windArrowMove {
-      0% { transform: rotate(var(--wind-angle)) translateX(-10px); opacity: 0; }
-      12% { opacity: var(--wind-opacity); }
-      82% { opacity: var(--wind-opacity); }
-      100% { transform: rotate(var(--wind-angle)) translateX(22px); opacity: 0; }
-    }
-
-    @media (max-width: 900px) {
-      .remo-dashboard { grid-template-columns: 1fr; }
-      .map-frame-wrap { height: 380px; }
-      .map-controls { display: none; }
-      .mobile-controls { display: grid; gap: .75rem; }
-    }
-
-    @media (max-width: 560px) {
-      .remo-weather-block { padding: .45rem; }
-      .weather-card { padding: .75rem; gap: .75rem; }
-      .weather-card h2 { font-size: 1.25rem; }
-      .weather-logo,
-      .weather-logo-fallback {
-        width: 44px;
-        height: 44px;
-        flex-basis: 44px;
-      }
-      .updated { font-size: .78rem; margin: -.35rem 0 0; }
-      .session-summary {
-        padding: .75rem;
-        font-size: .86rem;
-      }
-      .session-summary strong { font-size: .98rem; }
-      .forecast-used { font-size: .74rem; }
-      .status-line { margin-top: .35rem; font-size: .86rem; }
-      .session-meta {
-        gap: .35rem;
-        margin-top: .55rem;
-      }
-      .meta-pill {
-        padding: .32rem .52rem;
-        font-size: .78rem;
-      }
-      .session-buttons { grid-template-columns: repeat(3, 1fr); }
-      .day-btn,
-      .session-btn {
-        padding: .5rem .35rem;
-        font-size: .82rem;
-      }
-      .mini-wind-card {
-        grid-template-columns: 52px 1fr;
-        gap: .55rem;
-        text-align: left;
-        margin-top: .6rem;
-        padding: .6rem;
-        border-radius: 10px;
-      }
-      .mini-compass {
-        width: 50px;
-        height: 50px;
-        margin: 0;
-      }
-      .mini-compass::before,
-      .mini-compass::after { font-size: .48rem; }
-      .mini-compass-arrow-wrap {
-        width: 28px;
-        height: 28px;
-      }
-      .mini-compass-arrow {
-        width: 28px;
-        height: 28px;
-      }
-      .mini-wind-info strong { font-size: 1.05rem; }
-      .mini-wind-info span { font-size: .78rem; }
-      .forecast-comment {
-        margin-top: .42rem;
-        padding-top: .42rem;
-        font-size: .78rem;
-        line-height: 1.28;
-      }
-      .forecast-alert {
-        margin-top: .45rem;
-        padding: .5rem .55rem;
-        font-size: .78rem;
-      }
-      .sun-info {
-        margin-top: .5rem;
-        padding: .45rem .55rem;
-        font-size: .78rem;
-      }
-      .external-links { gap: .35rem; }
-      .radar-link {
-        padding: .36rem .5rem;
-        font-size: .72rem;
-      }
-      .notice {
-        padding: .6rem;
-        font-size: .76rem;
-        line-height: 1.35;
-      }
-      .map-note { display: none; }
-    }
-
-    @media (max-width: 560px) {
-      .map-frame-wrap {
-        height: 260px;
-        min-height: 240px;
-      }
-    }
-
-    @media (max-width: 390px) {
-      .map-frame-wrap {
-        height: 220px;
-        min-height: 210px;
-      }
-      .session-buttons { grid-template-columns: repeat(2, 1fr); }
-    }
+    @media(max-width:390px){.map-frame-wrap{height:220px;min-height:210px}.session-buttons{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
 <body>
@@ -627,370 +88,84 @@
         <div class="map-card">
           <div class="map-frame-wrap" aria-label="Mapa de la zona de rem de Sant Feliu de Guíxols">
             <div id="map"></div>
-            <div class="wind-stream-layer" aria-hidden="true">
-              <div class="wind-stream-field" id="windStreamLayer"></div>
-            </div>
-            <div class="map-error" id="mapError">
-              No s'ha pogut carregar el mapa en aquesta vista prèvia. Publicat a GitHub Pages funcionarà amb OpenStreetMap si hi ha connexió a internet.
-            </div>
+            <div class="wind-stream-layer" aria-hidden="true"><div class="wind-stream-field" id="windStreamLayer"></div></div>
+            <div class="map-error" id="mapError">No s'ha pogut carregar el mapa. Publicat a GitHub Pages funcionarà amb connexió a internet.</div>
             <div class="map-note">CARTO · OpenStreetMap</div>
           </div>
         </div>
-
         <div class="map-controls" aria-label="Selector de grups de sortida en escriptori">
           <div class="day-buttons" aria-label="Botons de previsió per dia de sortida">
-            <button class="day-btn active" data-day="1">Dilluns</button>
-            <button class="day-btn" data-day="3">Dimecres</button>
+            <button class="day-btn active" data-day="1">Dilluns</button><button class="day-btn" data-day="3">Dimecres</button>
           </div>
           <div class="session-buttons" aria-label="Botons de previsió per hora de sortida">
-            <button class="session-btn active" data-time="08:00">08:00</button>
-            <button class="session-btn" data-time="09:00">09:00</button>
-            <button class="session-btn" data-time="16:30">16:30</button>
-            <button class="session-btn" data-time="17:45">17:45</button>
-            <button class="session-btn" data-time="19:00">19:00</button>
-            <button class="session-btn" data-time="20:15">20:15</button>
+            <button class="session-btn active" data-time="08:00">08:00</button><button class="session-btn" data-time="09:00">09:00</button><button class="session-btn" data-time="16:30">16:30</button><button class="session-btn" data-time="17:45">17:45</button><button class="session-btn" data-time="19:00">19:00</button><button class="session-btn" data-time="20:15">20:15</button>
           </div>
         </div>
       </div>
-
       <aside class="weather-card" aria-label="Previsió per als grups de rem">
         <div class="weather-header">
           <h2>Previsió per grups</h2>
-          <img src="logo-llop-de-mar.png" alt="Club Rem Llop de Mar" class="weather-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+          <img src="logo-llop-de-mar.png" alt="Club Rem Llop de Mar" class="weather-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
           <span class="weather-logo-fallback" aria-hidden="true">LDM</span>
         </div>
-
         <p class="updated" id="updatedAt">Actualitzant dades...</p>
-
-        <div class="session-summary" id="sessionSummary">
-          Selecciona una hora de sortida per veure la previsió del grup.
-        </div>
-
+        <div class="session-summary" id="sessionSummary">Selecciona una hora de sortida per veure la previsió del grup.</div>
         <div class="mobile-controls" aria-label="Selector de grups de sortida en mòbil">
-          <div class="day-buttons" aria-label="Botons de previsió per dia de sortida">
-            <button class="day-btn active" data-day="1">Dilluns</button>
-            <button class="day-btn" data-day="3">Dimecres</button>
-          </div>
-          <div class="session-buttons" aria-label="Botons de previsió per hora de sortida">
-            <button class="session-btn active" data-time="08:00">08:00</button>
-            <button class="session-btn" data-time="09:00">09:00</button>
-            <button class="session-btn" data-time="16:30">16:30</button>
-            <button class="session-btn" data-time="17:45">17:45</button>
-            <button class="session-btn" data-time="19:00">19:00</button>
-            <button class="session-btn" data-time="20:15">20:15</button>
-          </div>
+          <div class="day-buttons"><button class="day-btn active" data-day="1">Dilluns</button><button class="day-btn" data-day="3">Dimecres</button></div>
+          <div class="session-buttons"><button class="session-btn active" data-time="08:00">08:00</button><button class="session-btn" data-time="09:00">09:00</button><button class="session-btn" data-time="16:30">16:30</button><button class="session-btn" data-time="17:45">17:45</button><button class="session-btn" data-time="19:00">19:00</button><button class="session-btn" data-time="20:15">20:15</button></div>
         </div>
-
         <div class="external-links">
           <a class="radar-link" href="https://www.meteo.cat/observacions/radar" target="_blank" rel="noopener">Radar pluja</a>
           <a class="radar-link" href="https://www.meteo.cat/wpweb/prediccio/avisos-de-situacio-meteorologica-de-perill/" target="_blank" rel="noopener">Avisos Meteocat</a>
         </div>
-
-        <div class="notice">
-          Dades automàtiques aproximades per a la zona de Sant Feliu de Guíxols. Abans de sortir a remar, reviseu també l'estat real de la mar, l'onatge, el radar de pluja i els avisos oficials.
-        </div>
+        <div class="notice">Dades automàtiques aproximades per a la zona de Sant Feliu de Guíxols. Abans de sortir a remar, reviseu també l'estat real de la mar, l'onatge, el radar de pluja i els avisos oficials.</div>
       </aside>
     </div>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const SANT_FELIU = { lat: 41.781, lon: 3.0345 };
-      let selectedSessionTime = "08:00";
-      let selectedSessionDay = 1;
-      let cachedWeatherData = null;
-      let map = null;
-
-      function initMap() {
-        const mapElement = document.getElementById("map");
-        const mapError = document.getElementById("mapError");
-
-        if (typeof L === "undefined") {
-          mapElement.style.display = "none";
-          mapError.style.display = "grid";
-          return;
-        }
-
-        const isDesktopMap = window.matchMedia("(min-width: 901px)").matches;
-        const initialZoom = isDesktopMap ? 14 : 13;
-
-        map = L.map("map", {
-          scrollWheelZoom: false,
-          zoomControl: false,
-          doubleClickZoom: false,
-          touchZoom: false,
-          boxZoom: false,
-          keyboard: false
-        }).setView([41.780, 3.034], initialZoom);
-
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png", {
-          subdomains: "abcd",
-          maxZoom: 20,
-          attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
-        }).addTo(map);
-
-        setTimeout(() => map.invalidateSize(), 200);
-        setTimeout(() => map.invalidateSize(), 800);
+    document.addEventListener("DOMContentLoaded",()=>{
+      const SANT_FELIU={lat:41.781,lon:3.0345};let selectedSessionTime="08:00",selectedSessionDay=1,cachedWeatherData=null,map=null;
+      function initMap(){
+        const mapElement=document.getElementById("map"),mapError=document.getElementById("mapError");
+        if(typeof L==="undefined"){mapElement.style.display="none";mapError.style.display="grid";return}
+        const isDesktopMap=window.matchMedia("(min-width: 901px)").matches,initialZoom=isDesktopMap?14:13;
+        map=L.map("map",{scrollWheelZoom:false,zoomControl:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,keyboard:false}).setView([41.780,3.034],initialZoom);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",{subdomains:"abcd",maxZoom:20,attribution:"&copy; OpenStreetMap contributors &copy; CARTO"}).addTo(map);
+        setTimeout(()=>map.invalidateSize(),200);setTimeout(()=>map.invalidateSize(),800)
       }
-
-      function directionName(deg) {
-        const directions = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
-        return directions[Math.round(deg / 45) % 8];
-      }
-
-      function capitalizeWords(text) {
-        return text
-          .split(" ")
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
-      }
-
-      function windNameCatalan(deg) {
-        const names = ["Tramuntana", "Gregal", "Llevant", "Xaloc", "Migjorn", "Garbí", "Ponent", "Mestral"];
-        return names[Math.round(deg / 45) % 8];
-      }
-
-      function windLabel(deg) {
-        return `${windNameCatalan(deg)} · ${directionName(deg)}`;
-      }
-
-      function formatUpdated(date) {
-        const formatted = date.toLocaleString("ca-ES", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
-        return capitalizeWords(formatted);
-      }
-
-      function formatSessionDate(date) {
-        const formatted = date.toLocaleDateString("ca-ES", { weekday: "long", day: "2-digit", month: "long" });
-        return capitalizeWords(formatted);
-      }
-
-      function formatShortTime(isoString) {
-        if (!isoString) return "--";
-        return new Date(isoString).toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" });
-      }
-
-      function parseSessionTime(timeString) {
-        const [hour, minute] = timeString.split(":").map(Number);
-        return { hour, minute };
-      }
-
-      function nextSessionDate(timeString, selectedDay) {
-        const now = new Date();
-        const { hour, minute } = parseSessionTime(timeString);
-
-        for (let offset = 0; offset < 10; offset++) {
-          const date = new Date(now);
-          date.setDate(now.getDate() + offset);
-          date.setHours(hour, minute, 0, 0);
-          if (date.getDay() === selectedDay && date >= now) return date;
-        }
-
-        return now;
-      }
-
-      function findClosestForecast(hourly, targetDate) {
-        let closestIndex = 0;
-        let closestDistance = Infinity;
-
-        hourly.time.forEach((time, index) => {
-          const distance = Math.abs(new Date(time) - targetDate);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = index;
-          }
-        });
-
-        return {
-          index: closestIndex,
-          time: hourly.time[closestIndex],
-          temp: hourly.temperature_2m[closestIndex],
-          apparentTemp: hourly.apparent_temperature?.[closestIndex],
-          rain: hourly.rain[closestIndex],
-          wind: hourly.wind_speed_10m[closestIndex],
-          direction: hourly.wind_direction_10m[closestIndex]
-        };
-      }
-
-      function findClosestMarineForecast(hourly, targetDate) {
-        if (!hourly || !hourly.time) return null;
-
-        let closestIndex = 0;
-        let closestDistance = Infinity;
-
-        hourly.time.forEach((time, index) => {
-          const distance = Math.abs(new Date(time) - targetDate);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = index;
-          }
-        });
-
-        return {
-          waveHeight: hourly.wave_height?.[closestIndex],
-          wavePeriod: hourly.wave_period?.[closestIndex],
-          waveDirection: hourly.wave_direction?.[closestIndex]
-        };
-      }
-
-      function findDailySun(daily, targetDate) {
-        if (!daily || !daily.time) return null;
-        const targetDay = targetDate.toISOString().slice(0, 10);
-        const index = daily.time.findIndex(day => day === targetDay);
-        if (index === -1) return null;
-        return { sunrise: daily.sunrise?.[index], sunset: daily.sunset?.[index] };
-      }
-
-      function seaStateLabel(waveHeight) {
-        if (waveHeight == null || Number.isNaN(waveHeight)) return "Mar sense dades";
-        if (waveHeight < .2) return "Mar plana";
-        if (waveHeight < .5) return "Marejol";
-        if (waveHeight < 1.25) return "Maror";
-        if (waveHeight < 2.5) return "Forta maror";
-        return "Maregassa";
-      }
-
-      function marineComment(marine) {
-        if (!marine || marine.waveHeight == null) return "No hi ha dades d'onatge per a aquesta hora.";
-        if (marine.waveHeight >= 1.25) return "Onatge important: convé evitar sortir o mantenir-se en una zona molt protegida.";
-        if (marine.waveHeight >= .7) return "Onatge moderat: valoreu la sortida segons el nivell del grup i l'estat real de la badia.";
-        if (marine.waveHeight >= .35) return "Una mica d'onatge: sortida possible, però cal vigilar l'entrada i la sortida de l'aigua.";
-        return "Mar força tranquil·la segons la previsió d'onatge.";
-      }
-
-      function lightsComment(targetDate, sun) {
-        if (!sun?.sunset) return "";
-
-        const sunsetDate = new Date(sun.sunset);
-        const minutesToSunset = Math.round((sunsetDate - targetDate) / 60000);
-
-        if (minutesToSunset <= 90 && minutesToSunset >= -30) {
-          return "Sortida propera a la posta de sol: cal portar llums i tenir-les a punt abans que baixi la llum.";
-        }
-
-        if (minutesToSunset < -30) {
-          return "Sortida després de la posta de sol: cal sortir amb llums.";
-        }
-
-        return "";
-      }
-
-      function rowingRecommendation({ wind, rain }, marine) {
-        const waveHeight = marine?.waveHeight ?? 0;
-        if (wind >= 45 || rain >= 12 || waveHeight >= 2.5 || (wind >= 35 && rain >= 5)) return { text: "Millor ajornar la sortida", color: "#b91c1c" };
-        if (wind >= 30 || rain >= 5 || waveHeight >= 1.25) return { text: "Quedar-se dins la badia", color: "#b7791f" };
-        if (wind >= 18 || rain >= .8 || waveHeight >= .7) return { text: "Sortida amb precaució", color: "#b7791f" };
-        return { text: "Bones condicions", color: "#16803c" };
-      }
-
-      function sessionAlert({ wind, rain }, marine) {
-        const alerts = [];
-        if (rain >= 3) alerts.push("pluja prevista");
-        if (wind >= 30) alerts.push("vent fort");
-        if (marine && marine.waveHeight >= 1.25) alerts.push("onatge important");
-        return alerts.length ? `Avís per al grup: ${alerts.join(", ")}. Reviseu l'estat real abans de sortir.` : "";
-      }
-
-      function forecastComment({ wind, rain }) {
-        if (rain >= 5 && wind >= 30) return "Pluja intensa i vent fort: millor ajornar la sortida i revisar l'evolució del temps. Si finalment sortiu, és recomanable quedar-se dins la badia.";
-        if (wind >= 35) return "Vent molt fort: condicions poc recomanables per sortir a remar. Si finalment sortiu, és recomanable quedar-se dins la badia.";
-        if (rain >= 5) return "Pluja abundant prevista: sortida incòmoda i amb visibilitat reduïda. Si finalment sortiu, és recomanable quedar-se dins la badia.";
-        if (wind >= 30) return "Vent fort: cal molta prudència. És recomanable quedar-se dins la badia i evitar zones més exposades.";
-        if (rain >= 3) return "Pluja notable: valoreu si compensa sortir i porteu roba adequada. Si sortiu, és recomanable quedar-se dins la badia.";
-        if (wind >= 18 && rain >= .8) return "Vent moderat i possibilitat de pluja: sortida possible, però amb precaució. És millor quedar-se dins la badia.";
-        if (wind >= 18) return "Vent moderat: bona idea quedar-se dins la badia o a prop de la costa i revisar l'estat real de la mar.";
-        if (rain >= .8) return "Pot ploure una mica: sortida possible, però convé anar preparats.";
-        if (wind <= 8 && rain < .2) return "Vent fluix i gairebé sense pluja: bones condicions per remar amb calma.";
-        return "Condicions en principi favorables, sempre revisant l'estat real de la mar abans de sortir.";
-      }
-
-      function windVisualConfig(speed) {
-        if (speed < 10) return { color: "#008fa3", count: 60, opacity: 0.58, duration: 5.6 };
-        if (speed < 18) return { color: "#164782", count: 80, opacity: 0.68, duration: 4.8 };
-        if (speed < 25) return { color: "#e85d04", count: 100, opacity: 0.76, duration: 4.0 };
-        return { color: "#be123c", count: 120, opacity: 0.84, duration: 3.3 };
-      }
-
-      function buildWindStreams(count, duration) {
-        const layer = document.getElementById("windStreamLayer");
-        if (!layer) return;
-        layer.innerHTML = "";
-
-        const cols = 18;
-        const rows = Math.ceil(count / cols);
-
-        for (let i = 0; i < count; i++) {
-          const el = document.createElement("span");
-          el.className = "wind-stream";
-
-          const col = i % cols;
-          const row = Math.floor(i / cols);
-          const usableWidth = 96;
-          const usableHeight = 90;
-          const leftStart = 1;
-          const topStart = 3;
-          const leftStep = usableWidth / Math.max(cols - 1, 1);
-          const topStep = usableHeight / Math.max(rows - 1, 1);
-          const leftJitter = ((i * 13) % 5) - 2;
-          const topJitter = ((i * 17) % 5) - 2;
-
-          el.style.left = `${leftStart + col * leftStep + leftJitter}%`;
-          el.style.top = `${topStart + row * topStep + topJitter}%`;
-          el.style.animationDelay = `${-(i * 0.06)}s`;
-          el.style.animationDuration = `${duration + (i % 4) * 0.08}s`;
-          el.style.scale = `${0.9 + (i % 3) * 0.05}`;
-          layer.appendChild(el);
-        }
-      }
-
-      function updateWindOverlay(speed, direction) {
-        const layer = document.getElementById("windStreamLayer");
-        const layerShell = layer?.closest(".wind-stream-layer");
-        if (!layer || !layerShell) return;
-
-        const baseConfig = windVisualConfig(speed);
-        const isMobile = window.matchMedia("(max-width: 600px)").matches;
-        const config = isMobile
-          ? { ...baseConfig, count: Math.max(35, Math.round(baseConfig.count * 0.45)), opacity: Math.max(0.42, baseConfig.opacity - 0.08) }
-          : baseConfig;
-        const rotation = direction + 90;
-
-        layerShell.classList.add("is-fading");
-        window.setTimeout(() => {
-          layer.style.setProperty("--wind-color", config.color);
-          layer.style.setProperty("--wind-opacity", config.opacity);
-          layer.style.setProperty("--wind-angle", `${rotation}deg`);
-          buildWindStreams(config.count, config.duration);
-          requestAnimationFrame(() => layerShell.classList.remove("is-fading"));
-        }, 280);
-      }
-
-      function updateSessionForecast(data) {
-        cachedWeatherData = data;
-        const weatherHourly = data.weather.hourly;
-        const marineHourly = data.marine?.hourly;
-        const weatherDaily = data.weather.daily;
-        const targetDate = nextSessionDate(selectedSessionTime, selectedSessionDay);
-        const session = findClosestForecast(weatherHourly, targetDate);
-        const marine = findClosestMarineForecast(marineHourly, targetDate);
-        const sun = findDailySun(weatherDaily, targetDate);
-        const status = rowingRecommendation(session, marine);
-        const comment = forecastComment(session);
-        const seaComment = marineComment(marine);
-        const lightComment = lightsComment(targetDate, sun);
-        const alertText = sessionAlert(session, marine);
-        const rotation = session.direction + 180;
-
-        document.getElementById("sessionSummary").innerHTML = `
+      function directionName(deg){return["N","NE","E","SE","S","SO","O","NO"][Math.round(deg/45)%8]}
+      function capitalizeWords(text){return text.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ")}
+      function windNameCatalan(deg){return["Tramuntana","Gregal","Llevant","Xaloc","Migjorn","Garbí","Ponent","Mestral"][Math.round(deg/45)%8]}
+      function windLabel(deg){return`${windNameCatalan(deg)} · ${directionName(deg)}`}
+      function formatUpdated(date){return capitalizeWords(date.toLocaleString("ca-ES",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}))}
+      function formatSessionDate(date){return capitalizeWords(date.toLocaleDateString("ca-ES",{weekday:"long",day:"2-digit",month:"long"}))}
+      function formatShortTime(isoString){return isoString?new Date(isoString).toLocaleTimeString("ca-ES",{hour:"2-digit",minute:"2-digit"}):"--"}
+      function parseSessionTime(t){const[hour,minute]=t.split(":").map(Number);return{hour,minute}}
+      function nextSessionDate(timeString,selectedDay){const now=new Date(),{hour,minute}=parseSessionTime(timeString);for(let offset=0;offset<10;offset++){const date=new Date(now);date.setDate(now.getDate()+offset);date.setHours(hour,minute,0,0);if(date.getDay()===selectedDay&&date>=now)return date}return now}
+      function findClosestForecast(hourly,targetDate){let closestIndex=0,closestDistance=Infinity;hourly.time.forEach((time,index)=>{const distance=Math.abs(new Date(time)-targetDate);if(distance<closestDistance){closestDistance=distance;closestIndex=index}});return{index:closestIndex,time:hourly.time[closestIndex],temp:hourly.temperature_2m[closestIndex],apparentTemp:hourly.apparent_temperature?.[closestIndex],rain:hourly.rain[closestIndex],wind:hourly.wind_speed_10m[closestIndex],direction:hourly.wind_direction_10m[closestIndex]}}
+      function findClosestMarineForecast(hourly,targetDate){if(!hourly||!hourly.time)return null;let closestIndex=0,closestDistance=Infinity;hourly.time.forEach((time,index)=>{const distance=Math.abs(new Date(time)-targetDate);if(distance<closestDistance){closestDistance=distance;closestIndex=index}});return{waveHeight:hourly.wave_height?.[closestIndex],wavePeriod:hourly.wave_period?.[closestIndex],waveDirection:hourly.wave_direction?.[closestIndex]}}
+      function findDailySun(daily,targetDate){if(!daily||!daily.time)return null;const targetDay=targetDate.toISOString().slice(0,10),index=daily.time.findIndex(day=>day===targetDay);return index===-1?null:{sunrise:daily.sunrise?.[index],sunset:daily.sunset?.[index]}}
+      function seaStateLabel(h){if(h==null||Number.isNaN(h))return"Mar sense dades";if(h<.2)return"Mar plana";if(h<.5)return"Marejol";if(h<1.25)return"Maror";if(h<2.5)return"Forta maror";return"Maregassa"}
+      function waveDirectionLabel(deg){return deg==null||Number.isNaN(deg)?"direcció sense dades":`${windNameCatalan(deg)} · ${directionName(deg)}`}
+      function marineComment(marine){if(!marine||marine.waveHeight==null)return"No hi ha dades d'onatge per a aquesta hora.";const d=marine.waveDirection!=null?` Onatge de ${waveDirectionLabel(marine.waveDirection)}.`:"";if(marine.waveHeight>=1.25)return`Onatge important: convé evitar sortir o mantenir-se en una zona molt protegida.${d}`;if(marine.waveHeight>=.7)return`Onatge moderat: valoreu la sortida segons el nivell del grup i l'estat real de la badia.${d}`;if(marine.waveHeight>=.35)return`Una mica d'onatge: sortida possible, però cal vigilar l'entrada i la sortida de l'aigua.${d}`;return`Mar força tranquil·la segons la previsió d'onatge.${d}`}
+      function lightsComment(targetDate,sun){if(!sun?.sunset)return"";const m=Math.round((new Date(sun.sunset)-targetDate)/60000);if(m<=90&&m>=-30)return"Sortida propera a la posta de sol: cal portar llums i tenir-les a punt abans que baixi la llum.";if(m<-30)return"Sortida després de la posta de sol: cal sortir amb llums.";return""}
+      function rowingRecommendation({wind,rain},marine){const waveHeight=marine?.waveHeight??0;if(wind>=45||rain>=12||waveHeight>=2.5||(wind>=35&&rain>=5))return{text:"Millor ajornar la sortida",color:"#b91c1c"};if(wind>=30||rain>=5||waveHeight>=1.25)return{text:"Quedar-se dins la badia",color:"#b7791f"};if(wind>=18||rain>=.8||waveHeight>=.7)return{text:"Sortida amb precaució",color:"#b7791f"};return{text:"Bones condicions",color:"#16803c"}}
+      function sessionAlert({wind,rain},marine){const alerts=[];if(rain>=3)alerts.push("pluja prevista");if(wind>=30)alerts.push("vent fort");if(marine&&marine.waveHeight>=1.25)alerts.push("onatge important");return alerts.length?`Avís per al grup: ${alerts.join(", ")}. Reviseu l'estat real abans de sortir.`:""}
+      function forecastComment({wind,rain}){if(rain>=5&&wind>=30)return"Pluja intensa i vent fort: millor ajornar la sortida i revisar l'evolució del temps. Si finalment sortiu, és recomanable quedar-se dins la badia.";if(wind>=35)return"Vent molt fort: condicions poc recomanables per sortir a remar. Si finalment sortiu, és recomanable quedar-se dins la badia.";if(rain>=5)return"Pluja abundant prevista: sortida incòmoda i amb visibilitat reduïda. Si finalment sortiu, és recomanable quedar-se dins la badia.";if(wind>=30)return"Vent fort: cal molta prudència. És recomanable quedar-se dins la badia i evitar zones més exposades.";if(rain>=3)return"Pluja notable: valoreu si compensa sortir i porteu roba adequada. Si sortiu, és recomanable quedar-se dins la badia.";if(wind>=18&&rain>=.8)return"Vent moderat i possibilitat de pluja: sortida possible, però amb precaució. És millor quedar-se dins la badia.";if(wind>=18)return"Vent moderat: bona idea quedar-se dins la badia o a prop de la costa i revisar l'estat real de la mar.";if(rain>=.8)return"Pot ploure una mica: sortida possible, però convé anar preparats.";if(wind<=8&&rain<.2)return"Vent fluix i gairebé sense pluja: bones condicions per remar amb calma.";return"Condicions en principi favorables, sempre revisant l'estat real de la mar abans de sortir."}
+      function windVisualConfig(speed){if(speed<10)return{color:"#008fa3",count:60,opacity:.58,duration:5.6};if(speed<18)return{color:"#164782",count:80,opacity:.68,duration:4.8};if(speed<25)return{color:"#e85d04",count:100,opacity:.76,duration:4.0};return{color:"#be123c",count:120,opacity:.84,duration:3.3}}
+      function buildWindStreams(count,duration){const layer=document.getElementById("windStreamLayer");if(!layer)return;layer.innerHTML="";const cols=18,rows=Math.ceil(count/cols);for(let i=0;i<count;i++){const el=document.createElement("span");el.className="wind-stream";const col=i%cols,row=Math.floor(i/cols),usableWidth=96,usableHeight=90,leftStart=1,topStart=3,leftStep=usableWidth/Math.max(cols-1,1),topStep=usableHeight/Math.max(rows-1,1),leftJitter=((i*13)%5)-2,topJitter=((i*17)%5)-2;el.style.left=`${leftStart+col*leftStep+leftJitter}%`;el.style.top=`${topStart+row*topStep+topJitter}%`;el.style.animationDelay=`${-(i*.06)}s`;el.style.animationDuration=`${duration+(i%4)*.08}s`;el.style.scale=`${.9+(i%3)*.05}`;layer.appendChild(el)}}
+      function updateWindOverlay(speed,direction){const layer=document.getElementById("windStreamLayer"),shell=layer?.closest(".wind-stream-layer");if(!layer||!shell)return;const base=windVisualConfig(speed),isMobile=window.matchMedia("(max-width: 600px)").matches,config=isMobile?{...base,count:Math.max(35,Math.round(base.count*.45)),opacity:Math.max(.42,base.opacity-.08)}:base,rotation=direction+90;shell.classList.add("is-fading");window.setTimeout(()=>{layer.style.setProperty("--wind-color",config.color);layer.style.setProperty("--wind-opacity",config.opacity);layer.style.setProperty("--wind-angle",`${rotation}deg`);buildWindStreams(config.count,config.duration);requestAnimationFrame(()=>shell.classList.remove("is-fading"))},280)}
+      function updateSessionForecast(data){cachedWeatherData=data;const targetDate=nextSessionDate(selectedSessionTime,selectedSessionDay),session=findClosestForecast(data.weather.hourly,targetDate),marine=findClosestMarineForecast(data.marine?.hourly,targetDate),sun=findDailySun(data.weather.daily,targetDate),status=rowingRecommendation(session,marine),comment=forecastComment(session),seaComment=marineComment(marine),lightComment=lightsComment(targetDate,sun),alertText=sessionAlert(session,marine),rotation=session.direction+180;document.getElementById("sessionSummary").innerHTML=`
           <strong>${formatSessionDate(targetDate)} · ${selectedSessionTime}</strong>
           <span class="forecast-used">Previsió més propera: ${formatShortTime(session.time)}</span>
           <span class="status-line"><span class="status-dot" style="background:${status.color}"></span>${status.text}</span>
           <div class="session-meta">
             <span class="meta-pill">🌡️ ${Math.round(session.temp)} °C</span>
-            <span class="meta-pill">Sensació ${session.apparentTemp != null ? Math.round(session.apparentTemp) + " °C" : "--"}</span>
+            <span class="meta-pill">Sensació ${session.apparentTemp!=null?Math.round(session.apparentTemp)+" °C":"--"}</span>
             <span class="meta-pill">🌧️ ${session.rain.toFixed(1)} mm</span>
-            <span class="meta-pill sea-pill">🌊 ${marine && marine.waveHeight != null ? marine.waveHeight.toFixed(1) + " m" : "--"} · ${marine ? seaStateLabel(marine.waveHeight) : "Mar sense dades"}</span>
+            <span class="meta-pill sea-pill">🌊 ${marine&&marine.waveHeight!=null?marine.waveHeight.toFixed(1)+" m":"--"} · ${marine?seaStateLabel(marine.waveHeight):"Mar sense dades"}${marine?.waveDirection!=null?" · "+waveDirectionLabel(marine.waveDirection):""}</span>
           </div>
           <div class="mini-wind-card">
             <div class="mini-compass" aria-label="Direcció del vent">
@@ -1004,101 +179,16 @@
             <div class="mini-wind-info">
               <strong>${Math.round(session.wind)} km/h</strong>
               <span>${windLabel(session.direction)}</span>
-              <div class="forecast-comment">${comment}<br>${seaComment}${lightComment ? `<br>${lightComment}` : ""}</div>
-              ${alertText ? `<div class="forecast-alert">${alertText}</div>` : ""}
+              <div class="forecast-comment">${comment}<br>${seaComment}${lightComment?`<br>${lightComment}`:""}</div>
+              ${alertText?`<div class="forecast-alert">${alertText}</div>`:""}
             </div>
           </div>
-          <div class="sun-info">
-            <span>🌅 Sortida ${formatShortTime(sun?.sunrise)}</span>
-            <span>🌇 Posta ${formatShortTime(sun?.sunset)}</span>
-          </div>
-        `;
-
-        const inlineArrow = document.getElementById("windArrowInline");
-        if (inlineArrow) inlineArrow.style.transform = `rotate(${rotation}deg)`;
-        updateWindOverlay(session.wind, session.direction);
-      }
-
-      function syncControls() {
-        document.querySelectorAll(".day-btn").forEach(btn => {
-          btn.classList.toggle("active", Number(btn.dataset.day) === selectedSessionDay);
-        });
-        document.querySelectorAll(".session-btn").forEach(btn => {
-          btn.classList.toggle("active", btn.dataset.time === selectedSessionTime);
-        });
-      }
-
-      function attachControlEvents() {
-        document.querySelectorAll(".day-btn").forEach(button => {
-          button.addEventListener("click", () => {
-            selectedSessionDay = Number(button.dataset.day);
-            syncControls();
-            if (cachedWeatherData) updateSessionForecast(cachedWeatherData);
-            if (map) setTimeout(() => map.invalidateSize(), 100);
-          });
-        });
-
-        document.querySelectorAll(".session-btn").forEach(button => {
-          button.addEventListener("click", () => {
-            selectedSessionTime = button.dataset.time;
-            syncControls();
-            if (cachedWeatherData) updateSessionForecast(cachedWeatherData);
-            if (map) setTimeout(() => map.invalidateSize(), 100);
-          });
-        });
-      }
-
-      async function loadWeather() {
-        const weatherUrl = new URL("https://api.open-meteo.com/v1/forecast");
-        weatherUrl.search = new URLSearchParams({
-          latitude: SANT_FELIU.lat,
-          longitude: SANT_FELIU.lon,
-          hourly: "temperature_2m,apparent_temperature,rain,wind_speed_10m,wind_direction_10m",
-          daily: "sunrise,sunset",
-          forecast_days: "7",
-          timezone: "Europe/Madrid",
-          wind_speed_unit: "kmh"
-        });
-
-        const marineUrl = new URL("https://marine-api.open-meteo.com/v1/marine");
-        marineUrl.search = new URLSearchParams({
-          latitude: 41.776,
-          longitude: 3.045,
-          hourly: "wave_height,wave_direction,wave_period",
-          forecast_days: "7",
-          timezone: "Europe/Madrid"
-        });
-
-        try {
-          const [weatherResponse, marineResponse] = await Promise.all([fetch(weatherUrl), fetch(marineUrl)]);
-          if (!weatherResponse.ok) throw new Error("No s'ha pogut carregar la previsió meteorològica");
-
-          const weather = await weatherResponse.json();
-          const marine = marineResponse.ok ? await marineResponse.json() : null;
-
-          document.getElementById("updatedAt").textContent = `Actualitzat: ${formatUpdated(new Date())}`;
-          updateSessionForecast({ weather, marine });
-        } catch (error) {
-          document.getElementById("updatedAt").textContent = "No s'ha pogut carregar la previsió.";
-          document.getElementById("sessionSummary").textContent = "Hi ha hagut un problema carregant les dades meteorològiques.";
-          console.error(error);
-        }
-      }
-
-      function runSmokeTests() {
-        console.assert(Boolean(document.getElementById("map")), "Falta #map");
-        console.assert(Boolean(document.getElementById("windStreamLayer")), "Falta #windStreamLayer");
-        console.assert(directionName(0) === "N", "directionName(0) debería ser N");
-        console.assert(windNameCatalan(225) === "Garbí", "225° debería ser Garbí");
-        console.assert(nextSessionDate("08:00", 1) instanceof Date, "nextSessionDate debería devolver Date");
-      }
-
-      runSmokeTests();
-      attachControlEvents();
-      syncControls();
-      initMap();
-      loadWeather();
-      window.setInterval(loadWeather, 30 * 60 * 1000);
+          <div class="sun-info"><span>🌅 Sortida ${formatShortTime(sun?.sunrise)}</span><span>🌇 Posta ${formatShortTime(sun?.sunset)}</span></div>`;const inlineArrow=document.getElementById("windArrowInline");if(inlineArrow)inlineArrow.style.transform=`rotate(${rotation}deg)`;updateWindOverlay(session.wind,session.direction)}
+      function syncControls(){document.querySelectorAll(".day-btn").forEach(btn=>btn.classList.toggle("active",Number(btn.dataset.day)===selectedSessionDay));document.querySelectorAll(".session-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.time===selectedSessionTime))}
+      function attachControlEvents(){document.querySelectorAll(".day-btn").forEach(button=>button.addEventListener("click",()=>{selectedSessionDay=Number(button.dataset.day);syncControls();if(cachedWeatherData)updateSessionForecast(cachedWeatherData);if(map)setTimeout(()=>map.invalidateSize(),100)}));document.querySelectorAll(".session-btn").forEach(button=>button.addEventListener("click",()=>{selectedSessionTime=button.dataset.time;syncControls();if(cachedWeatherData)updateSessionForecast(cachedWeatherData);if(map)setTimeout(()=>map.invalidateSize(),100)}))}
+      async function loadWeather(){const weatherUrl=new URL("https://api.open-meteo.com/v1/forecast");weatherUrl.search=new URLSearchParams({latitude:SANT_FELIU.lat,longitude:SANT_FELIU.lon,hourly:"temperature_2m,apparent_temperature,rain,wind_speed_10m,wind_direction_10m",daily:"sunrise,sunset",forecast_days:"7",timezone:"Europe/Madrid",wind_speed_unit:"kmh"});const marineUrl=new URL("https://marine-api.open-meteo.com/v1/marine");marineUrl.search=new URLSearchParams({latitude:41.776,longitude:3.045,hourly:"wave_height,wave_direction,wave_period",forecast_days:"7",timezone:"Europe/Madrid"});try{const[weatherResponse,marineResponse]=await Promise.all([fetch(weatherUrl),fetch(marineUrl)]);if(!weatherResponse.ok)throw new Error("No s'ha pogut carregar la previsió meteorològica");const weather=await weatherResponse.json(),marine=marineResponse.ok?await marineResponse.json():null;document.getElementById("updatedAt").textContent=`Actualitzat: ${formatUpdated(new Date())}`;updateSessionForecast({weather,marine})}catch(error){document.getElementById("updatedAt").textContent="No s'ha pogut carregar la previsió.";document.getElementById("sessionSummary").textContent="Hi ha hagut un problema carregant les dades meteorològiques.";console.error(error)}}
+      function runSmokeTests(){console.assert(Boolean(document.getElementById("map")),"Falta #map");console.assert(Boolean(document.getElementById("windStreamLayer")),"Falta #windStreamLayer");console.assert(directionName(0)==="N","directionName(0) debería ser N");console.assert(windNameCatalan(225)==="Garbí","225° debería ser Garbí");console.assert(nextSessionDate("08:00",1) instanceof Date,"nextSessionDate debería devolver Date")}
+      runSmokeTests();attachControlEvents();syncControls();initMap();loadWeather();window.setInterval(loadWeather,30*60*1000)
     });
   </script>
 </body>
