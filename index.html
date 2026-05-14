@@ -519,12 +519,104 @@
     }
 
     @media (max-width: 560px) {
-      .remo-weather-block { padding: .5rem; }
-      .weather-card { padding: .9rem; }
-      .session-buttons { grid-template-columns: repeat(2, 1fr); }
-      .mini-wind-card { grid-template-columns: 1fr; text-align: center; }
-      .mini-compass { margin: 0 auto; }
+      .remo-weather-block { padding: .45rem; }
+      .weather-card { padding: .75rem; gap: .75rem; }
+      .weather-card h2 { font-size: 1.25rem; }
+      .weather-logo,
+      .weather-logo-fallback {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+      }
+      .updated { font-size: .78rem; margin: -.35rem 0 0; }
+      .session-summary {
+        padding: .75rem;
+        font-size: .86rem;
+      }
+      .session-summary strong { font-size: .98rem; }
+      .forecast-used { font-size: .74rem; }
+      .status-line { margin-top: .35rem; font-size: .86rem; }
+      .session-meta {
+        gap: .35rem;
+        margin-top: .55rem;
+      }
+      .meta-pill {
+        padding: .32rem .52rem;
+        font-size: .78rem;
+      }
+      .session-buttons { grid-template-columns: repeat(3, 1fr); }
+      .day-btn,
+      .session-btn {
+        padding: .5rem .35rem;
+        font-size: .82rem;
+      }
+      .mini-wind-card {
+        grid-template-columns: 52px 1fr;
+        gap: .55rem;
+        text-align: left;
+        margin-top: .6rem;
+        padding: .6rem;
+        border-radius: 10px;
+      }
+      .mini-compass {
+        width: 50px;
+        height: 50px;
+        margin: 0;
+      }
+      .mini-compass::before,
+      .mini-compass::after { font-size: .48rem; }
+      .mini-compass-arrow-wrap {
+        width: 28px;
+        height: 28px;
+      }
+      .mini-compass-arrow {
+        width: 28px;
+        height: 28px;
+      }
+      .mini-wind-info strong { font-size: 1.05rem; }
+      .mini-wind-info span { font-size: .78rem; }
+      .forecast-comment {
+        margin-top: .42rem;
+        padding-top: .42rem;
+        font-size: .78rem;
+        line-height: 1.28;
+      }
+      .forecast-alert {
+        margin-top: .45rem;
+        padding: .5rem .55rem;
+        font-size: .78rem;
+      }
+      .sun-info {
+        margin-top: .5rem;
+        padding: .45rem .55rem;
+        font-size: .78rem;
+      }
+      .external-links { gap: .35rem; }
+      .radar-link {
+        padding: .36rem .5rem;
+        font-size: .72rem;
+      }
+      .notice {
+        padding: .6rem;
+        font-size: .76rem;
+        line-height: 1.35;
+      }
       .map-note { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      .map-frame-wrap {
+        height: 260px;
+        min-height: 240px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .map-frame-wrap {
+        height: 220px;
+        min-height: 210px;
+      }
+      .session-buttons { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
