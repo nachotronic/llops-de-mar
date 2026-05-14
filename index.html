@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<script>if(!location.search.includes('t='))location.replace(location.pathname+'?t='+Date.now());</script>
+<title>Vent · Tossa–S'Agaró</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green: #1D9E75; --paper: #f4f1eb; --border: #d8d2c4;
+  --muted: #888; --ink: #1a1a1a; --white: #fff;
+  --blue: #378ADD; --amber: #EF9F27; --red: #D85A30; --light: #85B7EB;
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: 'Georgia', serif;
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* ── Header ── */
+header {
+  flex-shrink: 0;
+  padding: .65rem 1rem .55rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .5rem;
+}
+
+h1 { font-size: clamp(.9rem, 3vw, 1.15rem); font-weight: normal; white-space: nowrap; }
+h1 span { color: var(--green); font-style: italic; }
+
+#updated { font-size: .62rem; color: var(--muted); font-family: monospace; white-space: nowrap; }
+
+/* ── Controls ── */
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+
+.ctrl-label {
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.btn-group { display: flex; gap: .25rem; flex-wrap: wrap; }
+
+.btn {
+  padding: .25rem .65rem;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  border-radius: 2rem;
+  font-size: .68rem;
+  font-family: 'Georgia', serif;
+  cursor: pointer;
+  color: #666;
+  transition: all .1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+.btn:active { opacity: .75; }
+.btn.av { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.btn.ah { background: var(--green); border-color: var(--green); color: white; }
+
+.sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; margin: 0 .1rem; }
+
+/* ── Main ── */
+main {
+  flex: 1;
+  padding: .9rem 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+#date-label {
+  font-size: .78rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Cards */
+#cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 8px;
+}
+
+.card {
+  background: var(--white);
+  border: .5px solid var(--border);
+  border-radius: 10px;
+  padding: .65rem .8rem;
+}
+
+.card-name {
+  font-size: .65rem;
+  color: var(--muted);
+  margin-bottom: .3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-val {
+  font-size: 1.5rem;
+  font-weight: normal;
+  font-style: italic;
+  line-height: 1;
+  margin-bottom: .2rem;
+}
+
+.card-val small { font-size: .7rem; font-style: normal; color: var(--muted); }
+.card-sub { font-size: .63rem; color: var(--muted); line-height: 1.55; }
+
+/* Arrows */
+#arrows-wrap { display: flex; flex-direction: column; gap: .4rem; }
+#arrows-title { font-size: .65rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+#arrows {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 8px;
+}
+
+.acard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: .5px solid var(--border);
+  border-radius: 10px;
+  padding: .45rem .7rem;
+}
+
+.acard-name { font-size: .72rem; color: var(--ink); }
+.acard-sub { font-size: .62rem; color: var(--muted); }
+
+/* Chart */
+#chart-section { display: flex; flex-direction: column; gap: .4rem; }
+#chart-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+#legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: .68rem; color: var(--muted); }
+#chart-wrap { position: relative; width: 100%; height: clamp(180px, 30vw, 260px); }
+
+/* Beaufort */
+#bft {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: .65rem;
+  color: var(--muted);
+}
+
+.bft-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+
+footer {
+  padding: 0 1rem .75rem;
+  font-size: .62rem;
+  color: var(--muted);
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>Vent <span>Litoral Tossa–S'Agaró</span></h1>
+    <div id="updated">—</div>
+  </div>
+  <div class="ctrl-row">
+    <div class="btn-group">
+      <button class="btn av" data-v="wind">Vent</button>
+      <button class="btn" data-v="temp">Temp.</button>
+      <button class="btn" data-v="rain">Pluja</button>
+    </div>
+    <div class="sep"></div>
+    <div class="btn-group">
+      <button class="btn ah" data-h="now">Ara</button>
+      <button class="btn" data-h="8">8h</button>
+      <button class="btn" data-h="9">9h</button>
+      <button class="btn" data-h="16">16h</button>
+      <button class="btn" data-h="17">17h</button>
+      <button class="btn" data-h="19">19h</button>
+      <button class="btn" data-h="20">20h</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="date-label">Carregant…</div>
+  <div id="cards"></div>
+  <div id="arrows-wrap">
+    <div id="arrows-title">Direcció del vent</div>
+    <div id="arrows"></div>
+  </div>
+  <div id="chart-section">
+    <div id="chart-label">Previsió 72 hores</div>
+    <div id="legend"></div>
+    <div id="chart-wrap">
+      <canvas id="chart" role="img" aria-label="Gràfic de previsió 72h per al litoral"></canvas>
+    </div>
+  </div>
+  <div id="bft">
+    <span><span class="bft-dot" style="background:var(--light);"></span>Fluix &lt;3 m/s</span>
+    <span><span class="bft-dot" style="background:var(--green);"></span>Moderat 3–8</span>
+    <span><span class="bft-dot" style="background:var(--amber);"></span>Fort 8–14</span>
+    <span><span class="bft-dot" style="background:var(--red);"></span>Molt fort &gt;14</span>
+  </div>
+</main>
+
+<footer>Font: Open-Meteo · model ECMWF · actualització horària</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const SPOTS = [
+  {name:'Tossa de Mar', lat:41.722,lon:2.936,color:'#378ADD'},
+  {name:'Sant Feliu',   lat:41.781,lon:3.031,color:'#1D9E75'},
+  {name:"Platja d'Aro", lat:41.815,lon:3.068,color:'#EF9F27'},
+  {name:"S'Agaró",      lat:41.820,lon:3.073,color:'#D85A30'},
+  {name:'Palamós',      lat:41.847,lon:3.131,color:'#8B5CF6'},
+];
+
+const VARS = {
+  wind: {key:'windspeed_10m',  unit:'m/s', type:'line'},
+  temp: {key:'temperature_2m', unit:'°C',  type:'line'},
+  rain: {key:'precipitation',  unit:'mm',  type:'bar'},
+};
+
+let allData=[], chart=null, curV='wind', curH='now', times=[], nowIdx=0;
+
+function bCol(v){ return v<3?'#85B7EB':v<8?'#1D9E75':v<14?'#EF9F27':'#D85A30'; }
+function tCol(v){ return v<10?'#85B7EB':v<18?'#1D9E75':v<25?'#EF9F27':'#D85A30'; }
+function rCol(v){ return v===0?'#D3D1C7':v<2?'#85B7EB':v<10?'#378ADD':'#185FA5'; }
+function vCol(v){ return curV==='wind'?bCol(v):curV==='temp'?tCol(v):rCol(v); }
+function dir8(d){ return['N','NE','E','SE','S','SO','O','NO'][Math.round(d/45)%8]; }
+
+function getIdx(){
+  if(curH==='now') return nowIdx;
+  const h=parseInt(curH);
+  const base=new Date(times[nowIdx]);
+  base.setHours(h,0,0,0);
+  if(base<=new Date(times[nowIdx])) base.setDate(base.getDate()+1);
+  const iso=base.toISOString().slice(0,14);
+  const idx=times.findIndex(t=>t.replace('T',' ').startsWith(iso.replace('T',' ')));
+  return idx>=0?idx:nowIdx;
+}
+
+function fmtDate(idx){
+  return new Date(times[idx]).toLocaleString('ca-ES',{
+    weekday:'long',day:'numeric',month:'long',
+    hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'
+  });
+}
+
+function buildCards(idx){
+  const vc=VARS[curV];
+  document.getElementById('cards').innerHTML=allData.map(s=>{
+    const val=s.h[vc.key][idx];
+    const col=vCol(val);
+    let sub='';
+    if(curV==='wind'){
+      sub='Ratxa '+s.h.windgusts_10m[idx].toFixed(1)+' m/s · '+dir8(s.h.winddirection_10m[idx]);
+    } else if(curV==='temp'){
+      const sl=s.h.temperature_2m.slice(idx,idx+24);
+      sub='Max '+Math.max(...sl).toFixed(1)+'° · Min '+Math.min(...sl).toFixed(1)+'°';
+    } else {
+      const acc=s.h.precipitation.slice(idx,idx+24).reduce((a,b)=>a+b,0);
+      sub='Acum. 24h: '+acc.toFixed(1)+' mm';
+    }
+    return '<div class="card">'+
+      '<div class="card-name">'+s.name+'</div>'+
+      '<div class="card-val" style="color:'+col+';">'+val.toFixed(1)+'<small> '+vc.unit+'</small></div>'+
+      '<div class="card-sub">'+sub+'</div>'+
+      '</div>';
+  }).join('');
+}
+
+function buildArrows(idx){
+  const wrap=document.getElementById('arrows-wrap');
+  const bft=document.getElementById('bft');
+  if(curV!=='wind'){ wrap.style.display='none'; bft.style.display='none'; return; }
+  wrap.style.display='flex';
+  bft.style.display='flex';
+  document.getElementById('arrows').innerHTML=allData.map(s=>{
+    const spd=s.h.windspeed_10m[idx];
+    const dir=s.h.winddirection_10m[idx];
+    const gust=s.h.windgusts_10m[idx];
+    const col=bCol(spd);
+    const rad=dir*Math.PI/180;
+    const ax=(20+14*Math.sin(rad)).toFixed(1);
+    const ay=(20-14*Math.cos(rad)).toFixed(1);
+    return '<div class="acard">'+
+      '<svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true">'+
+      '<circle cx="20" cy="20" r="17" fill="none" stroke="rgba(128,128,128,.2)" stroke-width="1"/>'+
+      '<line x1="20" y1="20" x2="'+ax+'" y2="'+ay+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>'+
+      '<circle cx="'+ax+'" cy="'+ay+'" r="4" fill="'+col+'"/>'+
+      '</svg>'+
+      '<div>'+
+        '<div class="acard-name">'+s.name+'</div>'+
+        '<div class="acard-sub">'+spd.toFixed(1)+' · Ratxa '+gust.toFixed(1)+' m/s · '+dir8(dir)+'</div>'+
+      '</div>'+
+      '</div>';
+  }).join('');
+}
+
+function buildChart(){
+  const vc=VARS[curV];
+  if(chart) chart.destroy();
+  chart=new Chart(document.getElementById('chart').getContext('2d'),{
+    type:vc.type,
+    data:{
+      labels:times,
+      datasets:allData.map(s=>({
+        label:s.name,
+        data:s.h[vc.key],
+        borderColor:s.color,
+        backgroundColor:s.color+(curV==='rain'?'99':'18'),
+        borderWidth:curV==='rain'?0:2,
+        pointRadius:0,
+        tension:.35,
+        fill:curV==='rain',
+      }))
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          title:items=>{
+            const d=new Date(times[items[0].dataIndex]);
+            return d.toLocaleString('ca-ES',{weekday:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'});
+          },
+          label:ctx=>ctx.dataset.label+': '+ctx.raw.toFixed(1)+' '+vc.unit
+        }}
+      },
+      scales:{
+        x:{
+          ticks:{color:'#999',font:{size:10},maxRotation:0,
+            callback(val,i){
+              const d=new Date(times[i]),h=d.getHours();
+              if(h===0) return d.toLocaleDateString('ca-ES',{weekday:'short',day:'numeric'});
+              if(h===12) return '12h';
+              return '';
+            }
+          },
+          grid:{color:'rgba(0,0,0,.05)'}
+        },
+        y:{
+          min:curV==='rain'?0:undefined,
+          ticks:{color:'#999',font:{size:10},callback:v=>v+' '+vc.unit},
+          grid:{color:'rgba(0,0,0,.05)'}
+        }
+      }
+    }
+  });
+}
+
+function buildLegend(){
+  document.getElementById('legend').innerHTML=allData.map(s=>
+    '<span style="display:flex;align-items:center;gap:4px;">'+
+    '<span style="width:18px;height:2.5px;border-radius:2px;background:'+s.color+';display:inline-block;"></span>'+
+    s.name+'</span>'
+  ).join('');
+}
+
+function render(){
+  const idx=getIdx();
+  document.getElementById('date-label').textContent=fmtDate(idx);
+  buildCards(idx);
+  buildArrows(idx);
+  buildChart();
+}
+
+async function fetchSpot(s){
+  const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+s.lat+'&longitude='+s.lon+
+    '&hourly=windspeed_10m,winddirection_10m,windgusts_10m,temperature_2m,precipitation'+
+    '&wind_speed_unit=ms&forecast_days=3&timezone=Europe%2FMadrid');
+  const d=await r.json();
+  return {...s,h:d.hourly};
+}
+
+async function main(){
+  try{
+    allData=await Promise.all(SPOTS.map(fetchSpot));
+    times=allData[0].h.time;
+    const now=new Date();
+    nowIdx=Math.max(0,times.findIndex(t=>new Date(t)>=now)-1);
+    buildLegend();
+    render();
+    document.getElementById('updated').textContent=
+      now.toLocaleTimeString('ca-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'});
+  } catch(e){
+    document.getElementById('date-label').textContent='Error carregant dades: '+e.message;
+  }
+}
+
+document.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{
+  curV=b.dataset.v;
+  document.querySelectorAll('[data-v]').forEach(x=>x.classList.toggle('av',x===b));
+  render();
+}));
+
+document.querySelectorAll('[data-h]').forEach(b=>b.addEventListener('click',()=>{
+  curH=b.dataset.h;
+  document.querySelectorAll('[data-h]').forEach(x=>x.classList.toggle('ah',x===b));
+  render();
+}));
+
+main();
+</script>
+</body>
+</html>
