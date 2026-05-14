@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Remades Sant Feliu</title>
-  <meta name="description" content="Mapa de la badia de Sant Feliu de Guíxols i previsió de pluja, temperatura i vent per als grups de rem." />
+  <title>Mapa i previsió · Remades Sant Feliu</title>
+  <meta name="description" content="Bloc de mapa de la badia de Sant Feliu de Guíxols amb previsió de pluja, temperatura i vent per als grups de rem." />
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ7RCf5tD4+M3j3x7zD47mJ6U2d6Z4I=" crossorigin="" />
 
@@ -13,7 +13,6 @@
       --mar: #0f4c5c;
       --mar-fosc: #083642;
       --mar-clar: #e3f4f8;
-      --sorra: #f2e8cf;
       --corall: #e76f51;
       --blanc: #ffffff;
       --text: #1f2933;
@@ -24,8 +23,6 @@
 
     * { box-sizing: border-box; }
 
-    html { scroll-behavior: smooth; }
-
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -34,217 +31,57 @@
       line-height: 1.6;
     }
 
-    a { color: inherit; text-decoration: none; }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      background: rgba(255,255,255,.95);
-      border-bottom: 1px solid #e5e7eb;
-      backdrop-filter: blur(8px);
+    .remo-weather-block {
+      width: 100%;
+      padding: 1rem;
+      background: var(--blanc);
     }
 
-    .nav {
+    .remo-dashboard {
+      width: 100%;
       max-width: 1180px;
       margin: 0 auto;
-      padding: 1rem 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .logo {
-      font-weight: 900;
-      letter-spacing: -.04em;
-      color: var(--mar-fosc);
-      font-size: 1.15rem;
-    }
-
-    .menu {
-      display: flex;
-      gap: 1rem;
-      font-size: .95rem;
-      color: var(--gris-text);
-    }
-
-    .menu a:hover { color: var(--corall); }
-
-    .hero {
-      color: var(--blanc);
-      background:
-        radial-gradient(circle at 80% 20%, rgba(231,111,81,.28), transparent 32%),
-        linear-gradient(120deg, rgba(8,54,66,.96), rgba(15,76,92,.78)),
-        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80") center/cover;
-      padding: 5.5rem 1.25rem 4rem;
-    }
-
-    .hero-inner {
-      max-width: 1180px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap: 2rem;
-      align-items: center;
-    }
-
-    .pre {
-      text-transform: uppercase;
-      letter-spacing: .16em;
-      font-weight: 800;
-      font-size: .78rem;
-      color: var(--sorra);
-      margin-bottom: 1rem;
-    }
-
-    h1 {
-      font-size: clamp(2.7rem, 7vw, 5.6rem);
-      line-height: .92;
-      margin: 0 0 1.25rem;
-      letter-spacing: -.07em;
-    }
-
-    .hero p.intro {
-      font-size: clamp(1.1rem, 2vw, 1.35rem);
-      max-width: 680px;
-      margin: 0 0 2rem;
-      color: rgba(255,255,255,.9);
-    }
-
-    .buttons { display: flex; gap: .75rem; flex-wrap: wrap; }
-
-    .btn {
-      display: inline-block;
-      padding: .85rem 1.15rem;
-      border-radius: 999px;
-      font-weight: 800;
-      border: 2px solid transparent;
-    }
-
-    .btn-primary { background: var(--corall); color: var(--blanc); }
-    .btn-secondary { border-color: rgba(255,255,255,.7); color: var(--blanc); }
-
-    .hero-card {
-      background: rgba(255,255,255,.96);
-      color: var(--text);
-      border-radius: 28px;
-      padding: 1.5rem;
-      box-shadow: var(--ombra);
-    }
-
-    .hero-card h2 {
-      margin: 0 0 .25rem;
-      font-size: 1.2rem;
-      color: var(--mar-fosc);
-    }
-
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: .45rem;
-      padding: .35rem .7rem;
-      border-radius: 999px;
-      background: var(--mar-clar);
-      color: var(--mar-fosc);
-      font-weight: 800;
-      font-size: .85rem;
-      margin: .75rem 0 1rem;
-    }
-
-    .status-dot {
-      width: .65rem;
-      height: .65rem;
-      border-radius: 50%;
-      background: #22c55e;
-    }
-
-    .current-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: .7rem;
-      margin-top: 1rem;
-    }
-
-    .current-item {
-      background: var(--gris);
-      border-radius: 18px;
-      padding: .8rem;
-    }
-
-    .current-item span {
-      display: block;
-      color: var(--gris-text);
-      font-size: .78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    .current-item strong {
-      display: block;
-      margin-top: .25rem;
-      font-size: 1.25rem;
-      color: var(--mar-fosc);
-    }
-
-    section { padding: 4.5rem 1.25rem; }
-    .container { max-width: 1180px; margin: 0 auto; }
-    .section-title { max-width: 760px; margin-bottom: 2rem; }
-
-    .kicker {
-      color: var(--corall);
-      text-transform: uppercase;
-      letter-spacing: .14em;
-      font-weight: 900;
-      font-size: .78rem;
-      margin: 0 0 .4rem;
-    }
-
-    h2 {
-      font-size: clamp(2rem, 4vw, 3.1rem);
-      line-height: 1;
-      letter-spacing: -.05em;
-      margin: 0 0 1rem;
-      color: var(--mar-fosc);
-    }
-
-    .lead { font-size: 1.12rem; color: var(--gris-text); }
-
-    .dashboard {
       display: grid;
       grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
-      gap: 1.2rem;
+      gap: 1rem;
       align-items: stretch;
     }
 
     .map-card,
     .weather-card {
-      border-radius: 28px;
+      border-radius: 24px;
       overflow: hidden;
       box-shadow: var(--ombra);
       background: var(--blanc);
       border: 1px solid #e5e7eb;
     }
 
-    #map { height: 560px; min-height: 420px; width: 100%; }
+    #map {
+      height: 620px;
+      min-height: 420px;
+      width: 100%;
+    }
 
     .weather-card {
-      padding: 1.25rem;
+      padding: 1.15rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
 
-    .weather-card h3 {
-      font-size: 1.4rem;
+    .weather-card h2 {
+      font-size: 1.45rem;
       line-height: 1.1;
-      letter-spacing: -.03em;
+      letter-spacing: -.04em;
       margin: 0;
       color: var(--mar-fosc);
     }
 
-    .updated { color: var(--gris-text); font-size: .9rem; margin: -.35rem 0 .25rem; }
+    .updated {
+      color: var(--gris-text);
+      font-size: .9rem;
+      margin: -.45rem 0 .1rem;
+    }
 
     .session-buttons {
       display: grid;
@@ -261,14 +98,21 @@
       font-weight: 900;
       cursor: pointer;
       transition: transform .15s ease, background .15s ease, color .15s ease;
+      font: inherit;
+      font-size: .95rem;
     }
 
     .session-btn:hover { transform: translateY(-1px); }
-    .session-btn.active { background: var(--mar-fosc); color: var(--blanc); border-color: var(--mar-fosc); }
+
+    .session-btn.active {
+      background: var(--mar-fosc);
+      color: var(--blanc);
+      border-color: var(--mar-fosc);
+    }
 
     .session-summary {
       background: var(--gris);
-      border-radius: 20px;
+      border-radius: 18px;
       padding: .95rem;
       color: var(--gris-text);
       font-size: .95rem;
@@ -281,20 +125,36 @@
       margin-bottom: .25rem;
     }
 
+    .status-line {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      margin-top: .45rem;
+      font-weight: 900;
+      color: var(--mar-fosc);
+    }
+
+    .status-dot {
+      width: .7rem;
+      height: .7rem;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
     .wind-box {
       display: grid;
-      grid-template-columns: 116px 1fr;
+      grid-template-columns: 112px 1fr;
       gap: 1rem;
       align-items: center;
       background: linear-gradient(140deg, var(--mar-clar), #fff);
-      border-radius: 24px;
+      border-radius: 22px;
       padding: 1rem;
       border: 1px solid #d6edf3;
     }
 
     .wind-compass {
-      width: 106px;
-      height: 106px;
+      width: 104px;
+      height: 104px;
       border-radius: 50%;
       background: var(--blanc);
       display: grid;
@@ -336,9 +196,17 @@
       color: var(--mar-fosc);
     }
 
-    .wind-details span { color: var(--gris-text); font-size: .95rem; }
+    .wind-details span {
+      display: block;
+      margin-top: .25rem;
+      color: var(--gris-text);
+      font-size: .95rem;
+    }
 
-    .forecast-list { display: grid; gap: .65rem; }
+    .forecast-list {
+      display: grid;
+      gap: .65rem;
+    }
 
     .forecast-row {
       display: grid;
@@ -347,7 +215,7 @@
       align-items: center;
       padding: .75rem;
       background: var(--gris);
-      border-radius: 18px;
+      border-radius: 16px;
       font-size: .92rem;
     }
 
@@ -361,60 +229,38 @@
       letter-spacing: .05em;
     }
 
-    .hour { font-weight: 900; color: var(--mar-fosc); }
-    .pill { display: inline-flex; align-items: center; gap: .25rem; white-space: nowrap; }
+    .hour {
+      font-weight: 900;
+      color: var(--mar-fosc);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      white-space: nowrap;
+    }
 
     .notice {
-      font-size: .92rem;
+      font-size: .88rem;
       color: var(--gris-text);
       background: #fff7ed;
       border: 1px solid #fed7aa;
-      border-radius: 18px;
-      padding: .85rem;
-    }
-
-    .about { background: var(--gris); }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-    }
-
-    .card {
-      background: var(--blanc);
-      padding: 1.25rem;
-      border-radius: 24px;
-      box-shadow: 0 12px 30px rgba(8,54,66,.08);
-      border: 1px solid #e5e7eb;
-    }
-
-    .card h3 {
-      margin: 0 0 .45rem;
-      color: var(--mar-fosc);
-      font-size: 1.25rem;
-      letter-spacing: -.03em;
-    }
-
-    footer {
-      background: var(--mar-fosc);
-      color: rgba(255,255,255,.78);
-      padding: 2rem 1.25rem;
-      text-align: center;
+      border-radius: 16px;
+      padding: .8rem;
     }
 
     .leaflet-popup-content-wrapper { border-radius: 16px; }
 
     @media (max-width: 900px) {
-      .hero-inner,
-      .dashboard,
-      .cards { grid-template-columns: 1fr; }
-      .menu { display: none; }
-      #map { height: 440px; }
+      .remo-dashboard { grid-template-columns: 1fr; }
+      #map { height: 460px; }
     }
 
     @media (max-width: 560px) {
-      .current-grid { grid-template-columns: 1fr; }
+      .remo-weather-block { padding: .5rem; }
+      .weather-card { padding: .9rem; }
+      .session-buttons { grid-template-columns: repeat(2, 1fr); }
       .wind-box { grid-template-columns: 1fr; text-align: center; }
       .wind-compass { margin: 0 auto; }
       .forecast-row { grid-template-columns: 56px 1fr 1fr; }
@@ -423,42 +269,239 @@
   </style>
 </head>
 <body>
-  <header>
-    <nav class="nav" aria-label="Navegació principal">
-      <a href="#inici" class="logo">Remades Sant Feliu</a>
-      <div class="menu">
-        <a href="#mapa">Mapa i temps</a>
-        <a href="#sortides">Sortides</a>
-        <a href="#contacte">Contacte</a>
+  <main class="remo-weather-block">
+    <div class="remo-dashboard">
+      <div class="map-card">
+        <div id="map" aria-label="Mapa de la badia de Sant Feliu de Guíxols"></div>
       </div>
-    </nav>
-  </header>
 
-  <main id="inici">
-    <section class="hero">
-      <div class="hero-inner">
-        <div>
-          <div class="pre">Badia de Sant Feliu de Guíxols</div>
-          <h1>Sortim a remar?</h1>
-          <p class="intro">Consulta el mapa de la badia i la previsió de pluja, temperatura i vent per als grups de dilluns i dimecres.</p>
-          <div class="buttons">
-            <a href="#mapa" class="btn btn-primary">Veure mapa i previsió</a>
-            <a href="#contacte" class="btn btn-secondary">Contactar amb el grup</a>
+      <aside class="weather-card" aria-label="Previsió per als grups de rem">
+        <h2>Previsió per grups</h2>
+        <p class="updated" id="updatedAt">Actualitzant dades...</p>
+
+        <div class="session-buttons" aria-label="Botons de previsió per hora de sortida">
+          <button class="session-btn active" data-hour="8">08:00</button>
+          <button class="session-btn" data-hour="9">09:00</button>
+          <button class="session-btn" data-hour="16">16:00</button>
+          <button class="session-btn" data-hour="17">17:00</button>
+          <button class="session-btn" data-hour="19">19:00</button>
+          <button class="session-btn" data-hour="20">20:00</button>
+        </div>
+
+        <div class="session-summary" id="sessionSummary">
+          Selecciona una hora de sortida per veure la previsió del grup.
+        </div>
+
+        <div class="wind-box">
+          <div class="wind-compass" aria-label="Direcció del vent">
+            <svg class="wind-arrow" id="windArrow" viewBox="0 0 64 64" role="img" aria-label="Fletxa de vent">
+              <path fill="currentColor" d="M32 4l15 38-15-8-15 8L32 4z"></path>
+              <path fill="currentColor" opacity=".35" d="M28 32h8v24h-8z"></path>
+            </svg>
+          </div>
+          <div class="wind-details">
+            <strong id="windSpeedBig">-- km/h</strong>
+            <span id="windDirectionText">Direcció pendent</span>
           </div>
         </div>
 
-        <aside class="hero-card" aria-label="Resum meteorològic actual">
-          <h2>Condicions ara</h2>
-          <div class="status" id="statusBadge"><span class="status-dot" id="statusDot"></span><span id="statusText">Carregant previsió...</span></div>
-          <div class="current-grid">
-            <div class="current-item"><span>Temperatura</span><strong id="currentTemp">-- °C</strong></div>
-            <div class="current-item"><span>Pluja</span><strong id="currentRain">-- mm</strong></div>
-            <div class="current-item"><span>Vent</span><strong id="currentWind">-- km/h</strong></div>
+        <div class="forecast-list" id="forecastList">
+          <div class="forecast-row header">
+            <div>Hora</div>
+            <div>Temp.</div>
+            <div>Pluja</div>
+            <div class="hide-small">Vent</div>
           </div>
-        </aside>
-      </div>
-    </section>
+        </div>
 
-    <section id="mapa">
-      <div class="container">
-        <div class="section-title">
+        <div class="notice">
+          Dades automàtiques de previsió. Abans de sortir a remar, reviseu també l'estat real de la mar i les indicacions oficials.
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script>
+    const SANT_FELIU = { lat: 41.7807, lon: 3.0308 };
+    let selectedSessionHour = 8;
+    let cachedWeatherData = null;
+
+    const POINTS = [
+      { name: "Platja de Sant Feliu", coords: [41.7807, 3.0308], text: "Punt de referència principal de la badia." },
+      { name: "Port de Sant Feliu", coords: [41.7767, 3.0367], text: "Zona portuària i referència per a entrades i sortides." },
+      { name: "Punta de Garbí", coords: [41.7780, 3.0235], text: "Referència visual a l'oest de la badia." }
+    ];
+
+    const map = L.map("map", { scrollWheelZoom: false }).setView([SANT_FELIU.lat, SANT_FELIU.lon], 14);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
+
+    POINTS.forEach(point => {
+      L.marker(point.coords).addTo(map).bindPopup(`<strong>${point.name}</strong><br>${point.text}`);
+    });
+
+    L.polyline([[41.7780, 3.0235], [41.7807, 3.0308], [41.7767, 3.0367]], {
+      weight: 4,
+      opacity: .75
+    }).addTo(map);
+
+    const windMapIcon = L.divIcon({
+      className: "wind-map-icon",
+      html: `<div style="width:54px;height:54px;border-radius:50%;background:white;display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.22);border:2px solid #e76f51;"><svg id="mapWindArrow" width="36" height="36" viewBox="0 0 64 64" style="color:#e76f51;transition:transform .6s ease;animation:pulseWind 1.8s ease-in-out infinite;"><path fill="currentColor" d="M32 4l15 38-15-8-15 8L32 4z"></path><path fill="currentColor" opacity=".35" d="M28 32h8v24h-8z"></path></svg></div>`,
+      iconSize: [54, 54],
+      iconAnchor: [27, 27]
+    });
+
+    L.marker([41.7794, 3.0302], { icon: windMapIcon }).addTo(map).bindPopup("Direcció i intensitat del vent segons la previsió seleccionada");
+
+    function directionName(deg) {
+      const directions = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
+      return directions[Math.round(deg / 45) % 8];
+    }
+
+    function formatHour(isoString) {
+      return new Date(isoString).toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function formatUpdated(date) {
+      return date.toLocaleString("ca-ES", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    }
+
+    function formatSessionDate(date) {
+      return date.toLocaleDateString("ca-ES", { weekday: "long", day: "2-digit", month: "long" });
+    }
+
+    function nextSessionDate(hour) {
+      const now = new Date();
+      const allowedDays = [1, 3];
+
+      for (let offset = 0; offset < 10; offset++) {
+        const date = new Date(now);
+        date.setDate(now.getDate() + offset);
+        date.setHours(hour, 0, 0, 0);
+
+        if (allowedDays.includes(date.getDay()) && date >= now) {
+          return date;
+        }
+      }
+
+      return now;
+    }
+
+    function findClosestForecast(hourly, targetDate) {
+      let closestIndex = 0;
+      let closestDistance = Infinity;
+
+      hourly.time.forEach((time, index) => {
+        const distance = Math.abs(new Date(time) - targetDate);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      return {
+        index: closestIndex,
+        time: hourly.time[closestIndex],
+        temp: hourly.temperature_2m[closestIndex],
+        rain: hourly.rain[closestIndex],
+        wind: hourly.wind_speed_10m[closestIndex],
+        direction: hourly.wind_direction_10m[closestIndex]
+      };
+    }
+
+    function rowingStatus({ wind, rain }) {
+      if (wind >= 30 || rain >= 3) return { text: "Condicions complicades", color: "#ef4444" };
+      if (wind >= 18 || rain >= .8) return { text: "Sortida amb precaució", color: "#f59e0b" };
+      return { text: "Bones condicions", color: "#22c55e" };
+    }
+
+    function updateSessionForecast(data) {
+      cachedWeatherData = data;
+      const hourly = data.hourly;
+      const targetDate = nextSessionDate(selectedSessionHour);
+      const session = findClosestForecast(hourly, targetDate);
+      const status = rowingStatus(session);
+      const rotation = session.direction + 180;
+
+      document.getElementById("sessionSummary").innerHTML = `
+        <strong>${formatSessionDate(targetDate)} · ${String(selectedSessionHour).padStart(2, "0")}:00</strong>
+        ${Math.round(session.temp)} °C · ${session.rain.toFixed(1)} mm de pluja · vent de ${Math.round(session.wind)} km/h de ${directionName(session.direction)}.
+        <span class="status-line"><span class="status-dot" style="background:${status.color}"></span>${status.text}</span>
+      `;
+
+      document.getElementById("windSpeedBig").textContent = `${Math.round(session.wind)} km/h`;
+      document.getElementById("windDirectionText").textContent = `Vent de ${directionName(session.direction)} · ${Math.round(session.direction)}°`;
+      document.getElementById("windArrow").style.transform = `rotate(${rotation}deg)`;
+
+      const mapArrow = document.getElementById("mapWindArrow");
+      if (mapArrow) mapArrow.style.transform = `rotate(${rotation}deg)`;
+
+      const forecastList = document.getElementById("forecastList");
+      forecastList.innerHTML = `<div class="forecast-row header"><div>Hora</div><div>Temp.</div><div>Pluja</div><div class="hide-small">Vent</div></div>`;
+
+      const startIndex = Math.max(0, session.index - 1);
+      const sessionWindow = hourly.time.map((time, i) => ({
+        time,
+        temp: hourly.temperature_2m[i],
+        rain: hourly.rain[i],
+        wind: hourly.wind_speed_10m[i],
+        direction: hourly.wind_direction_10m[i]
+      })).slice(startIndex, startIndex + 4);
+
+      sessionWindow.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "forecast-row";
+        row.innerHTML = `
+          <div class="hour">${formatHour(item.time)}</div>
+          <div class="pill">🌡️ ${Math.round(item.temp)} °C</div>
+          <div class="pill">🌧️ ${item.rain.toFixed(1)} mm</div>
+          <div class="pill hide-small">💨 ${Math.round(item.wind)} km/h ${directionName(item.direction)}</div>
+        `;
+        forecastList.appendChild(row);
+      });
+    }
+
+    document.querySelectorAll(".session-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedSessionHour = Number(button.dataset.hour);
+        document.querySelectorAll(".session-btn").forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+        if (cachedWeatherData) updateSessionForecast(cachedWeatherData);
+      });
+    });
+
+    async function loadWeather() {
+      const url = new URL("https://api.open-meteo.com/v1/forecast");
+      url.search = new URLSearchParams({
+        latitude: SANT_FELIU.lat,
+        longitude: SANT_FELIU.lon,
+        hourly: "temperature_2m,rain,wind_speed_10m,wind_direction_10m",
+        forecast_days: "7",
+        timezone: "Europe/Madrid",
+        wind_speed_unit: "kmh"
+      });
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("No s'ha pogut carregar la previsió");
+        const data = await response.json();
+        document.getElementById("updatedAt").textContent = `Actualitzat: ${formatUpdated(new Date())}`;
+        updateSessionForecast(data);
+      } catch (error) {
+        document.getElementById("updatedAt").textContent = "No s'ha pogut carregar la previsió.";
+        document.getElementById("sessionSummary").textContent = "Hi ha hagut un problema carregant les dades meteorològiques.";
+        console.error(error);
+      }
+    }
+
+    loadWeather();
+  </script>
+</body>
+</html>
+
