@@ -625,11 +625,11 @@
 
         <div class="external-links">
           <a class="radar-link" href="https://www.meteo.cat/observacions/radar" target="_blank" rel="noopener">Radar pluja</a>
-          <a class="radar-link" href="https://www.meteo.cat/wpweb/prediccio/avisos-de-situacio-meteorologica-de-perill/" target="_blank" rel="noopener">Avisos Meteocat</a>
+          <a class="radar-link" href="https://www.meteo.cat/prediccio/maritim" target="_blank" rel="noopener">Predicció marítima</a>
         </div>
 
         <div class="notice">
-          Dades automàtiques aproximades per a la zona de Sant Feliu de Guíxols. Abans de sortir a remar, reviseu també l'estat real de la mar, l'onatge, el radar de pluja i els avisos oficials.
+          Dades automàtiques aproximades per a la zona de Sant Feliu de Guíxols. Abans de sortir a remar, reviseu també l'estat real de la mar, l'onatge, el radar de pluja i la predicció marítima oficial.
         </div>
       </aside>
     </div>
@@ -1147,7 +1147,7 @@
         console.assert(Boolean(document.getElementById("windStreamLayer")), "Falta #windStreamLayer");
         console.assert(directionName(0) === "N", "directionName(0) debería ser N");
         console.assert(windNameCatalan(225) === "Garbí", "225° debería ser Garbí");
-                console.assert(nextSessionDate("08:00", 1) instanceof Date, "nextSessionDate debería devolver Date");
+        console.assert(nextSessionDate("08:00", 1) instanceof Date, "nextSessionDate debería devolver Date");
       }
 
       runSmokeTests();
@@ -1164,3 +1164,4 @@
   </script>
 </body>
 </html>
+
