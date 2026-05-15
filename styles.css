@@ -732,3 +732,38 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* FIX móvil: forzar mapa visible */
+@media (max-width: 900px) {
+  .map-card,
+  .map-frame-wrap {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .map-frame-wrap {
+    position: relative !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    background: #dceff3 !important;
+    overflow: hidden !important;
+  }
+
+  #map,
+  .leaflet-container,
+  .wind-stream-layer,
+  .map-note {
+    display: none !important;
+  }
+
+  .map-fallback-frame {
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 999 !important;
+    width: 100% !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    border: 0 !important;
+    background: #dceff3 !important;
+  }
+}
