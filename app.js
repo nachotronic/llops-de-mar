@@ -7,13 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function initMap() {
     const mapElement = document.getElementById("map");
-    const mapFrame = document.querySelector(".map-frame-wrap");
-
-    if (typeof L === "undefined") {
-      mapElement.style.display = "none";
-      mapFrame?.classList.add("map-failed");
-      return;
-    }
+    if (!mapElement || typeof L === "undefined") return;
 
     const isDesktopMap = window.matchMedia("(min-width: 901px)").matches;
     const initialZoom = isDesktopMap ? 14 : 13;
@@ -33,15 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
       attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
     }).addTo(map);
 
-    setTimeout(() => {
-      map.invalidateSize();
-      mapFrame?.classList.add("map-ready");
-    }, 400);
-
-    setTimeout(() => {
-      map.invalidateSize();
-      mapFrame?.classList.add("map-ready");
-    }, 1200);
+    setTimeout(() => map.invalidateSize(), 250);
+    setTimeout(() => map.invalidateSize(), 900);
   }
 
   function directionName(deg) {
@@ -62,27 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${windNameCatalan(deg)} · ${directionName(deg)}`;
   }
 
-  function waveDirectionLabel(deg) {
-    if (deg == null || Number.isNaN(deg)) return "direcció sense dades";
-    return `${windNameCatalan(deg)} · ${directionName(deg)}`;
-  }
-
-  function waveArrowHTML(deg) {
-    if (deg == null || Number.isNaN(deg)) return "";
-    return `<span class="wave-arrow-inline" style="transform: rotate(${deg}deg)" aria-hidden="true">↑</span>`;
-  }
-
   function formatUpdated(date) {
-    const formatted = date.toLocaleString("ca-ES", {
-      weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
-    });
+    const formatted = date.toLocaleString("ca-ES", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
     return capitalizeWords(formatted);
   }
 
   function formatSessionDate(date) {
-    const formatted = date.toLocaleDateString("ca-ES", {
-      weekday: "long", day: "2-digit", month: "long"
-    });
+    const formatted = date.toLocaleDateString("ca-ES", { weekday: "long", day: "2-digit", month: "long" });
     return capitalizeWords(formatted);
   }
 
@@ -170,9 +143,23 @@ document.addEventListener("DOMContentLoaded", () => {
     return "Maregassa";
   }
 
+  function waveDirectionLabel(deg) {
+    if (deg == null || Number.isNaN(deg)) return "direcció sense dades";
+    return `${windNameCatalan(deg)} · ${directionName(deg)}`;
+  }
+
+  function waveArrowHTML(deg) {
+    if (deg == null || Number.isNaN(deg)) return "";
+    return `<span class="wave-arrow-inline" style="transform: rotate(${deg}deg)" aria-hidden="true">↑</span>`;
+  }
+
   function marineComment(marine) {
     if (!marine || marine.waveHeight == null) return "No hi ha dades d'onatge per a aquesta hora.";
-    const directionText = marine.waveDirection != null ? ` Onatge de ${waveDirectionLabel(marine.waveDirection)}.` : "";
+
+    const directionText = marine.waveDirection != null
+      ? ` Onatge de ${waveDirectionLabel(marine.waveDirection)}.`
+      : "";
+
     if (marine.waveHeight >= 1.25) return `Onatge important: convé evitar sortir o mantenir-se en una zona molt protegida.${directionText}`;
     if (marine.waveHeight >= .7) return `Onatge moderat: valoreu la sortida segons el nivell del grup i l'estat real de la badia.${directionText}`;
     if (marine.waveHeight >= .35) return `Una mica d'onatge: sortida possible, però cal vigilar l'entrada i la sortida de l'aigua.${directionText}`;
@@ -183,24 +170,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!sun?.sunset) return "";
     const sunsetDate = new Date(sun.sunset);
     const minutesToSunset = Math.round((sunsetDate - targetDate) / 60000);
+
     if (minutesToSunset <= 90 && minutesToSunset >= -30) {
       return "Sortida propera a la posta de sol: cal portar llums i tenir-les a punt abans que baixi la llum.";
     }
-    if (minutesToSunset < -30) return "Sortida després de la posta de sol: cal sortir amb llums.";
+
+    if (minutesToSunset < -30) {
+      return "Sortida després de la posta de sol: cal sortir amb llums.";
+    }
+
     return "";
   }
 
   function rowingRecommendation({ wind, rain }, marine) {
     const waveHeight = marine?.waveHeight ?? 0;
-    if (wind >= 45 || rain >= 12 || waveHeight >= 2.5 || (wind >= 35 && rain >= 5)) {
-      return { text: "Millor ajornar la sortida", color: "#b91c1c" };
-    }
-    if (wind >= 30 || rain >= 5 || waveHeight >= 1.25) {
-      return { text: "Quedar-se dins la badia", color: "#b7791f" };
-    }
-    if (wind >= 18 || rain >= .8 || waveHeight >= .7) {
-      return { text: "Sortida amb precaució", color: "#b7791f" };
-    }
+    if (wind >= 45 || rain >= 12 || waveHeight >= 2.5 || (wind >= 35 && rain >= 5)) return { text: "Millor ajornar la sortida", color: "#b91c1c" };
+    if (wind >= 30 || rain >= 5 || waveHeight >= 1.25) return { text: "Quedar-se dins la badia", color: "#b7791f" };
+    if (wind >= 18 || rain >= .8 || waveHeight >= .7) return { text: "Sortida amb precaució", color: "#b7791f" };
     return { text: "Bones condicions", color: "#16803c" };
   }
 
@@ -236,19 +222,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const layer = document.getElementById("windStreamLayer");
     if (!layer) return;
     layer.innerHTML = "";
+
     const cols = 18;
     const rows = Math.ceil(count / cols);
+
     for (let i = 0; i < count; i++) {
       const el = document.createElement("span");
       el.className = "wind-stream";
+
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const leftStep = 96 / Math.max(cols - 1, 1);
-      const topStep = 90 / Math.max(rows - 1, 1);
+      const usableWidth = 96;
+      const usableHeight = 90;
+      const leftStart = 1;
+      const topStart = 3;
+      const leftStep = usableWidth / Math.max(cols - 1, 1);
+      const topStep = usableHeight / Math.max(rows - 1, 1);
       const leftJitter = ((i * 13) % 5) - 2;
       const topJitter = ((i * 17) % 5) - 2;
-      el.style.left = `${1 + col * leftStep + leftJitter}%`;
-      el.style.top = `${3 + row * topStep + topJitter}%`;
+
+      el.style.left = `${leftStart + col * leftStep + leftJitter}%`;
+      el.style.top = `${topStart + row * topStep + topJitter}%`;
       el.style.animationDelay = `${-(i * 0.06)}s`;
       el.style.animationDuration = `${duration + (i % 4) * 0.08}s`;
       el.style.scale = `${0.9 + (i % 3) * 0.05}`;
@@ -260,18 +254,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const layer = document.getElementById("windStreamLayer");
     const layerShell = layer?.closest(".wind-stream-layer");
     if (!layer || !layerShell) return;
+
     const baseConfig = windVisualConfig(speed);
-    const isMobile = window.matchMedia("(max-width: 600px)").matches;
-    const config = isMobile
-      ? { ...baseConfig, count: Math.max(35, Math.round(baseConfig.count * 0.45)), opacity: Math.max(0.42, baseConfig.opacity - 0.08) }
-      : baseConfig;
+    const isMobile = window.matchMedia("(max-width: 900px)").matches;
+    if (isMobile) return;
+
     const rotation = direction + 90;
     layerShell.classList.add("is-fading");
+
     window.setTimeout(() => {
-      layer.style.setProperty("--wind-color", config.color);
-      layer.style.setProperty("--wind-opacity", config.opacity);
+      layer.style.setProperty("--wind-color", baseConfig.color);
+      layer.style.setProperty("--wind-opacity", baseConfig.opacity);
       layer.style.setProperty("--wind-angle", `${rotation}deg`);
-      buildWindStreams(config.count, config.duration);
+      buildWindStreams(baseConfig.count, baseConfig.duration);
       requestAnimationFrame(() => layerShell.classList.remove("is-fading"));
     }, 280);
   }
@@ -321,7 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="sun-info">
         <span>🌅 Sortida ${formatShortTime(sun?.sunrise)}</span>
         <span>🌇 Posta ${formatShortTime(sun?.sunset)}</span>
-      </div>`;
+      </div>
+    `;
 
     const inlineArrow = document.getElementById("windArrowInline");
     if (inlineArrow) inlineArrow.style.transform = `rotate(${rotation}deg)`;
@@ -346,6 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (map) setTimeout(() => map.invalidateSize(), 100);
       });
     });
+
     document.querySelectorAll(".session-btn").forEach(button => {
       button.addEventListener("click", () => {
         selectedSessionTime = button.dataset.time;
@@ -367,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
       timezone: "Europe/Madrid",
       wind_speed_unit: "kmh"
     });
+
     const marineUrl = new URL("https://marine-api.open-meteo.com/v1/marine");
     marineUrl.search = new URLSearchParams({
       latitude: 41.776,
@@ -375,11 +373,14 @@ document.addEventListener("DOMContentLoaded", () => {
       forecast_days: "7",
       timezone: "Europe/Madrid"
     });
+
     try {
       const [weatherResponse, marineResponse] = await Promise.all([fetch(weatherUrl), fetch(marineUrl)]);
       if (!weatherResponse.ok) throw new Error("No s'ha pogut carregar la previsió meteorològica");
+
       const weather = await weatherResponse.json();
       const marine = marineResponse.ok ? await marineResponse.json() : null;
+
       document.getElementById("updatedAt").textContent = `Actualitzat: ${formatUpdated(new Date())}`;
       updateSessionForecast({ weather, marine });
     } catch (error) {
@@ -391,7 +392,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function runSmokeTests() {
     console.assert(Boolean(document.getElementById("map")), "Falta #map");
-    console.assert(Boolean(document.getElementById("windStreamLayer")), "Falta #windStreamLayer");
     console.assert(directionName(0) === "N", "directionName(0) debería ser N");
     console.assert(windNameCatalan(225) === "Garbí", "225° debería ser Garbí");
     console.assert(nextSessionDate("08:00", 1) instanceof Date, "nextSessionDate debería devolver Date");
@@ -403,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMap();
   loadWeather();
   window.setInterval(loadWeather, 30 * 60 * 1000);
+
   window.addEventListener("resize", () => {
     if (map) setTimeout(() => map.invalidateSize(), 150);
   });

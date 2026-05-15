@@ -9,9 +9,7 @@
   --shadow: 0 14px 34px rgba(16, 47, 58, .12);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -63,32 +61,9 @@ body {
 }
 
 #map {
-  position: relative;
-  z-index: 2;
   width: 100%;
   height: 100%;
-}
-
-.map-fallback-frame {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: none;
-  width: 100%;
-  height: 100%;
-  border: 0;
   background: var(--sea);
-}
-
-.map-error {
-  height: 100%;
-  display: none;
-  place-items: center;
-  padding: 1.5rem;
-  text-align: center;
-  background: var(--sea);
-  color: var(--ink);
-  font-weight: 800;
 }
 
 .map-note {
@@ -185,13 +160,8 @@ body {
   gap: .5rem;
 }
 
-.day-buttons {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.session-buttons {
-  grid-template-columns: repeat(3, 1fr);
-}
+.day-buttons { grid-template-columns: repeat(2, 1fr); }
+.session-buttons { grid-template-columns: repeat(3, 1fr); }
 
 .day-btn,
 .session-btn {
@@ -208,9 +178,7 @@ body {
 }
 
 .day-btn:hover,
-.session-btn:hover {
-  transform: translateY(-1px);
-}
+.session-btn:hover { transform: translateY(-1px); }
 
 .day-btn.active,
 .session-btn.active {
@@ -278,9 +246,7 @@ body {
   font-weight: 700;
 }
 
-.sea-pill {
-  background: #eef7f8;
-}
+.sea-pill { background: #eef7f8; }
 
 .wave-arrow-inline {
   display: inline-block;
@@ -326,15 +292,8 @@ body {
   color: var(--ink-soft);
 }
 
-.mini-compass::before {
-  content: "N";
-  top: .2rem;
-}
-
-.mini-compass::after {
-  content: "S";
-  bottom: .2rem;
-}
+.mini-compass::before { content: "N"; top: .2rem; }
+.mini-compass::after { content: "S"; bottom: .2rem; }
 
 .mini-compass-arrow-wrap {
   width: 38px;
@@ -354,15 +313,8 @@ body {
 }
 
 @keyframes pulseWind {
-  0%, 100% {
-    scale: 1;
-    opacity: .82;
-  }
-
-  50% {
-    scale: 1.08;
-    opacity: 1;
-  }
+  0%, 100% { scale: 1; opacity: .82; }
+  50% { scale: 1.08; opacity: 1; }
 }
 
 .mini-wind-info strong {
@@ -474,9 +426,7 @@ body {
   transition: opacity .28s ease;
 }
 
-.wind-stream-layer.is-fading {
-  opacity: 0;
-}
+.wind-stream-layer.is-fading { opacity: 0; }
 
 .wind-stream-field {
   --wind-color: #164782;
@@ -525,70 +475,42 @@ body {
 }
 
 @keyframes windArrowMove {
-  0% {
-    transform: rotate(var(--wind-angle)) translateX(-10px);
-    opacity: 0;
-  }
-
-  12% {
-    opacity: var(--wind-opacity);
-  }
-
-  82% {
-    opacity: var(--wind-opacity);
-  }
-
-  100% {
-    transform: rotate(var(--wind-angle)) translateX(22px);
-    opacity: 0;
-  }
+  0% { transform: rotate(var(--wind-angle)) translateX(-10px); opacity: 0; }
+  12% { opacity: var(--wind-opacity); }
+  82% { opacity: var(--wind-opacity); }
+  100% { transform: rotate(var(--wind-angle)) translateX(22px); opacity: 0; }
 }
 
 @media (max-width: 900px) {
-  .remo-dashboard {
-    grid-template-columns: 1fr;
-  }
+  .remo-dashboard { grid-template-columns: 1fr; }
 
   .map-frame-wrap {
-    height: 300px;
+    height: 280px;
     min-height: 260px;
   }
 
-  .map-controls {
-    display: none;
-  }
+  .map-controls { display: none; }
 
   .mobile-controls {
     display: grid;
     gap: .75rem;
   }
 
-  #map {
+  .wind-stream-layer,
+  .map-note {
     display: none;
-  }
-
-  .wind-stream-layer {
-    display: none;
-  }
-
-  .map-fallback-frame {
-    display: block;
   }
 }
 
 @media (max-width: 560px) {
-  .remo-weather-block {
-    padding: .45rem;
-  }
+  .remo-weather-block { padding: .45rem; }
 
   .weather-card {
     padding: .75rem;
     gap: .75rem;
   }
 
-  .weather-card h2 {
-    font-size: 1.25rem;
-  }
+  .weather-card h2 { font-size: 1.25rem; }
 
   .weather-logo,
   .weather-logo-fallback {
@@ -607,13 +529,9 @@ body {
     font-size: .86rem;
   }
 
-  .session-summary strong {
-    font-size: .98rem;
-  }
+  .session-summary strong { font-size: .98rem; }
 
-  .forecast-used {
-    font-size: .74rem;
-  }
+  .forecast-used { font-size: .74rem; }
 
   .status-line {
     margin-top: .35rem;
@@ -630,9 +548,7 @@ body {
     font-size: .78rem;
   }
 
-  .session-buttons {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .session-buttons { grid-template-columns: repeat(3, 1fr); }
 
   .day-btn,
   .session-btn {
@@ -656,27 +572,16 @@ body {
   }
 
   .mini-compass::before,
-  .mini-compass::after {
-    font-size: .48rem;
-  }
+  .mini-compass::after { font-size: .48rem; }
 
-  .mini-compass-arrow-wrap {
-    width: 28px;
-    height: 28px;
-  }
-
+  .mini-compass-arrow-wrap,
   .mini-compass-arrow {
     width: 28px;
     height: 28px;
   }
 
-  .mini-wind-info strong {
-    font-size: 1.05rem;
-  }
-
-  .mini-wind-info span {
-    font-size: .78rem;
-  }
+  .mini-wind-info strong { font-size: 1.05rem; }
+  .mini-wind-info span { font-size: .78rem; }
 
   .forecast-comment {
     margin-top: .42rem;
@@ -697,9 +602,7 @@ body {
     font-size: .78rem;
   }
 
-  .external-links {
-    gap: .35rem;
-  }
+  .external-links { gap: .35rem; }
 
   .radar-link {
     padding: .36rem .5rem;
@@ -712,76 +615,17 @@ body {
     line-height: 1.35;
   }
 
-  .map-note {
-    display: none;
-  }
-
   .map-frame-wrap {
-    height: 260px;
-    min-height: 240px;
+    height: 240px;
+    min-height: 220px;
   }
 }
 
 @media (max-width: 390px) {
   .map-frame-wrap {
-    height: 220px;
-    min-height: 210px;
+    height: 210px;
+    min-height: 200px;
   }
 
-  .session-buttons {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-/* FIX móvil: forzar mapa visible */
-@media (max-width: 900px) {
-  .map-card,
-  .map-frame-wrap {
-    display: block !important;
-    width: 100% !important;
-  }
-
-  .map-frame-wrap {
-    position: relative !important;
-    height: 280px !important;
-    min-height: 280px !important;
-    background: #dceff3 !important;
-    overflow: hidden !important;
-  }
-
-  #map,
-  .leaflet-container,
-  .wind-stream-layer,
-  .map-note {
-    display: none !important;
-  }
-
-  .map-fallback-frame {
-    display: block !important;
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 999 !important;
-    width: 100% !important;
-    height: 280px !important;
-    min-height: 280px !important;
-    border: 0 !important;
-    background: #dceff3 !important;
-  }
-}
-.map-frame-wrap {
-  height: 520px;
-  min-height: 360px;
-}
-
-.map-fallback-frame {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  border: 0 !important;
-}
-
-@media (max-width: 900px) {
-  .map-frame-wrap {
-    height: 280px !important;
-    min-height: 260px !important;
-  }
+  .session-buttons { grid-template-columns: repeat(2, 1fr); }
 }
