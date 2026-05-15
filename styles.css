@@ -767,3 +767,21 @@ body {
     background: #dceff3 !important;
   }
 }
+.map-frame-wrap {
+  height: 520px;
+  min-height: 360px;
+}
+
+.map-fallback-frame {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .map-frame-wrap {
+    height: 280px !important;
+    min-height: 260px !important;
+  }
+}
